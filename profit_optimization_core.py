@@ -8,6 +8,7 @@ Year: 2018
 '''
 import numpy as np 
 import math, time
+import scipy.integrate as integrate
 from config import *
 
 def phi_v_inv(y):
@@ -65,7 +66,7 @@ def get_customer1_IR(v_1,p_p_1,delta_small,k_delta_1,delta_1,s1d1):
 
 def assert_ex_ante_customer1_IR(v_1,p_p_1,delta_small,k_1,delta_1_max,s1d1):
 	#customer 1's ex ante IR constraint
-	ir_1_ante = get_customer1_IR(v_1,p_p_1,delta_small,k_1)
+	ir_1_ante = get_customer1_IR(v_1,p_p_1,delta_small,k_1,delta_1_max,s1d1)
 	print('Ex ante customer 1 IR should be nonneg for support_v[1]:',ir_1_ante)
 	assert ir_1_ante > 0
 
@@ -99,13 +100,14 @@ def get_cumulative_expected_ex_post_penalty_customer1(s1d,support_v,p_p_1,delta_
 def previous_customers_j(customer_j):
 	return [x for x in range(1,customer_j)] #NEED TO CHECK
 
-def sum_EEPPs(customer_j,customers,support_v,delta_small):
+def sum_EEPPs(customer_j,customers,support_v,delta_small,degradation_multiplier):
 	previous_customer_idxes = previous_customers_j(customer_j)
 	summed_val = 0
 	for idx in previous_customer_idxes:
 		if idx ==1: #our first customer is indexed from 1 and NOT 0
-			delta_1 = get_detour_two_customers_common_destination(customers[1],customers[2])
-			summed_val += get_cumulative_expected_ex_post_penalty_customer1(customers[1]['s1d1'],support_v,customers[1]['p_p_1'],delta_1,delta_small,customers[1]['k_delta_1'])
+			delta_1 = get_detour_two_customers_common_destination(customers[1],customers[2]) #based on actual detour, not cust[1]['delta_max']
+			k_delta_1 = degradation(delta_1,customers[1]['sd'],degradation_multiplier)
+			summed_val += get_cumulative_expected_ex_post_penalty_customer1(customers[1]['sd'],support_v,customers[1]['p_p'],delta_1,delta_small,k_delta_1) #HARDCODED BUT NEEDS TO CHANGE
 		else:
 			summed_val += 0 #TBD
 
@@ -137,7 +139,7 @@ def prob_pool_j(p_x_j,p_p_j,delta_small,support_v,k_delta_j_max,flag_print_argum
 		print('Need args (probability of pooling computation) between 0 and 1 with the second larger than the firs: ',argument1,argument2)
 	return prob_pool_val
 
-def incremental_profit_j_single_destination_components(x,delta_small,c_op,support_v,EEPP_coeff,customer_j,customers):
+def incremental_profit_j_single_destination_components(x,delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier,customer_j,customers):
 	'''
 	applicability: multi-source and single-destination
 	'''
@@ -147,16 +149,17 @@ def incremental_profit_j_single_destination_components(x,delta_small,c_op,suppor
 	EEPPjj = 0
 
 	p_x_var,p_p_var = x[0],x[1]
-	prob_exclusive_val = prob_exclusive_j(p_x_var,p_p_var,delta_small,support_v,customers[customer_j]['k_delta_j_max'])
-	prob_pool_val = prob_pool_j(p_x_var,p_p_var,delta_small,support_v,customers[customer_j]['k_delta_j_max'])
+	prob_exclusive_val = prob_exclusive_j(p_x_var,p_p_var,delta_small,support_v,customers[customer_j]['k_delta_max'])
+	prob_pool_val = prob_pool_j(p_x_var,p_p_var,delta_small,support_v,customers[customer_j]['k_delta_max'])
 	profit_exclusive_val = (p_x_var - c_op)*customers[customer_j]['sd']
-	profit_pool_val = p_p_var*(customers[customer_j]['sd'] + delta_j) + (sum_previous_customer_prices(customer_j,customers)-c_op)*delta_op_j - EEPP_coeff*sum_EEPPs(customer_j,customers) - EEPP_coeff*EEPPjj
+	expost_penalty = sum_EEPPs(customer_j,customers,support_v,delta_small,degradation_multiplier) + EEPPjj
+	profit_pool_val = p_p_var*(customers[customer_j]['sd'] + delta_j) + (sum_previous_customer_prices(customer_j,customers)-c_op)*delta_op_j - EEPP_coeff*expost_penalty
 
-	return (prob_exclusive_val,prob_pool_val,profit_exclusive_val,profit_pool_val)
+	return (prob_exclusive_val,prob_pool_val,profit_exclusive_val,profit_pool_val,expost_penalty)
 
-def incremental_profit_j_single_destination(x,delta_small,c_op,support_v,EEPP_coeff,customer_j,customers):
+def incremental_profit_j_single_destination(x,delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier,customer_j,customers):
 
-	prob_exclusive_val,prob_pool_val,profit_exclusive_val,profit_pool_val = incremental_profit_j_single_destination_components(x,delta_small,c_op,support_v,EEPP_coeff,customer_j,customers)
+	prob_exclusive_val,prob_pool_val,profit_exclusive_val,profit_pool_val,expost_penalty = incremental_profit_j_single_destination_components(x,delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier,customer_j,customers)
 	return prob_exclusive_val*profit_exclusive_val + prob_pool_val*profit_pool_val
 
 def pricing_feasibility_constraint(x,delta_small,k_delta_j_max):
@@ -173,6 +176,7 @@ def maximize_incremental_profit_j(params,customer_j,customers):
 	gridsearch_resolution = params['gridsearch_resolution']
 	delta_small = params['delta_small']
 	support_v = params['support_v']
+	degradation_multiplier = params['degradation_multiplier']
 
 	sjdj = customers[customer_j]['sd']
 	k_delta_j_max = customers[customer_j]['k_delta_max']
@@ -181,11 +185,11 @@ def maximize_incremental_profit_j(params,customer_j,customers):
 	px_ub = p_max
 	pp_lb = 0
 	pp_ub = k_delta_j_max*p_max/(1 + delta_small)
-	initial_guess = [(1+c_op)/2,k_1*(1+c_op)/2]
+	initial_guess = [(1+c_op)/2,k_delta_j_max*(1+c_op)/2]
 	assert px_lb <= initial_guess[0] <= px_ub
 	assert pp_lb <= initial_guess[1] <= pp_ub
 	print('initial_guess',initial_guess)
-	profit = incremental_profit_j_single_destination(initial_guess,delta_small,c_op,support_v,EEPP_coeff,customer_j,customers)
+	profit = incremental_profit_j_single_destination(initial_guess,delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier, customer_j,customers)
 	profit_surface = None
 
 	if solver_type == 'gridsearch':
@@ -200,7 +204,7 @@ def maximize_incremental_profit_j(params,customer_j,customers):
 			for idxp,p_p_var in enumerate(pp_gridvals):
 				if pricing_feasibility_constraint([p_x_var,p_p_var],delta_small,k_delta_j_max) >= 0:
 
-					profit_var = incremental_profit_j_single_destination([p_x_var,p_p_var],delta_small,c_op,support_v,EEPP_coeff,customer_j,customers)
+					profit_var = incremental_profit_j_single_destination([p_x_var,p_p_var],delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier,customer_j,customers)
 					profit_surface[idxx,idxp] = profit_var
 					if profit_var > profit:
 						profit = profit_var
@@ -224,6 +228,8 @@ if __name__=='__main__':
 	customers[2]['s'] = params['s2']
 	customers[2]['d'] = params['d']
 
+	customers[1]['p_p'] = params['p_p_1']
+	assert_p_p_1_greater_than_c_op(customers[1]['p_p'],params['c_op'])
 
 	for idx in customers:
 		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d']) #the drive by distance between customer idx and their destination
@@ -231,6 +237,9 @@ if __name__=='__main__':
 		customers[idx]['k_delta_max'] = degradation(customers[idx]['delta_max'],customers[idx]['sd'],params['degradation_multiplier'])
 	
 		print('idx',idx,'sd',customers[idx]['sd'],'delta_max',customers[idx]['delta_max'],'k_delta_max',customers[idx]['k_delta_max'])
+
+
+	assert_ex_ante_customer1_IR(params['support_v'][1],customers[1]['p_p'],params['delta_small'],customers[1]['k_delta_max'],customers[1]['delta_max'],customers[1]['sd'])
 
 
 	customer_j = 2 # i.e., j = 2
