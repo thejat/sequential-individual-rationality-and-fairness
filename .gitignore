@@ -1,0 +1,6 @@
+.DS_Store
+*.pyc
+temp/
+output/
+input/
+*.ipynb_checkpoints
