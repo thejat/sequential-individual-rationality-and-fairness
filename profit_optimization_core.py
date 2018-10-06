@@ -50,7 +50,7 @@ def degradation(delta_i,sidi,degradation_multiplier):
 	'''
 	delta_i is essentially a variable and this function needs to be reevaluated everytime
 	'''
-	degradation_coeff = 1 - delta_i/(degradation_multiplier*sidi)
+	degradation_coeff = 1 - delta_i/(degradation_multiplier*(sidi+1e-6))
 	return degradation_coeff
 
 def assert_p_p_1_greater_than_c_op(p_p_1,c_op):
@@ -79,7 +79,7 @@ def get_detour_two_customers_common_destination(cust1,cust2):
 	delta_j = distance(cust1['s'],cust2['s']) + cust2['sd'] - cust1['sd']
 	return delta_j
 
-def get_cumulative_expected_ex_post_penalty_customer1(s1d,support_v,p_p_1,delta_1,delta_small,k_delta_1):
+def get_cumulative_expected_ex_post_penalty_customer1(s1d,support_v,p_p_1,delta_1,delta_small,k_delta_1,k_delta_1_max):
 	'''
 	only called when customer 2 chooses pool
 	customer 1's ex post IR constraint if customer 2 decides to pool
@@ -87,12 +87,11 @@ def get_cumulative_expected_ex_post_penalty_customer1(s1d,support_v,p_p_1,delta_
 	NEED TO CHECK: TBD INCREMENTAL if more than {1,2,destination}
 	'''
 	# expectation conditioned on ex ante IR being satisfied
-	lb = expost_customer1_integration_lowerbound(p_p_1,delta_small,k_delta_1)
+	lb = expost_customer1_integration_lowerbound(p_p_1,delta_small,k_delta_1_max)
 
 	# k_delta_1 is a function of delta_1 and can change
 
-	expected_ex_post_penalty_cust1 = integrate.quad(lambda v1var: f_v(v1var,support_v)*max(0,-( k_delta_1*v1var*s1d - p_p_1*(s1d + delta_1))),
-										min(max(support_v[0],lb),support_v[1]),support_v[1]) 
+	expected_ex_post_penalty_cust1 = integrate.quad(lambda v1var: f_v(v1var,support_v)*max(0,-( k_delta_1*v1var*s1d - p_p_1*(s1d + delta_1))),min(max(support_v[0],lb),support_v[1]),support_v[1]) 
 	# print('expected ex post customer 1 IR penalty:',expected_ir_1_post_penalty[0])
 
 	return expected_ex_post_penalty_cust1[0]
@@ -107,7 +106,7 @@ def sum_EEPPs(customer_j,customers,support_v,delta_small,degradation_multiplier)
 		if idx ==1: #our first customer is indexed from 1 and NOT 0
 			delta_1 = get_detour_two_customers_common_destination(customers[1],customers[2]) #based on actual detour, not cust[1]['delta_max']
 			k_delta_1 = degradation(delta_1,customers[1]['sd'],degradation_multiplier)
-			summed_val += get_cumulative_expected_ex_post_penalty_customer1(customers[1]['sd'],support_v,customers[1]['p_p'],delta_1,delta_small,k_delta_1) #HARDCODED BUT NEEDS TO CHANGE
+			summed_val += get_cumulative_expected_ex_post_penalty_customer1(customers[1]['sd'],support_v,customers[1]['p_p'],delta_1,delta_small,k_delta_1,customers[1]['k_delta_max']) #HARDCODED BUT NEEDS TO CHANGE
 		else:
 			summed_val += 0 #TBD
 
@@ -124,7 +123,7 @@ def prob_exclusive_j(p_x_j,p_p_j,delta_small,support_v,k_delta_j_max):
 	'''
 	applicability: multi-source and multi-destination
 	'''
-	argument = (p_x_j - p_p_j*(1+delta_small))/(1-k_delta_j_max)
+	argument = (p_x_j - p_p_j*(1+delta_small))/(1-k_delta_j_max + 1e-6)
 	prob_exclusive_val = 1 - F_v(argument,support_v)
 	return prob_exclusive_val
 
@@ -132,12 +131,15 @@ def prob_pool_j(p_x_j,p_p_j,delta_small,support_v,k_delta_j_max,flag_print_argum
 	'''
 	applicability: multi-source and multi-destination
 	'''
-	argument1 = (p_x_j - p_p_j*(1+delta_small))/(1-k_delta_j_max)
-	argument2 = p_p_j*(1+delta_small)/k_delta_j_max
+	argument1 = (p_x_j - p_p_j*(1+delta_small))/(1-k_delta_j_max + 1e-6)
+	argument2 = p_p_j*(1+delta_small)/(k_delta_j_max)
+	if abs(argument1-argument2) < 1e-3: #HARDCODE
+		return 0
 	prob_pool_val = F_v(argument1,support_v) - F_v(argument2,support_v)
 	if flag_print_arguments is True:
-		print('Need args (probability of pooling computation) between 0 and 1 with the second larger than the firs: ',argument1,argument2)
-	return prob_pool_val
+		print('Need args (probability of pooling computation) between 0 and 1 with the second smaller than the first: ',argument1,argument2)
+	# assert prob_pool_val >= 0
+	return min(max(0,prob_pool_val),1)
 
 def incremental_profit_j_single_destination_components(x,delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier,customer_j,customers):
 	'''
@@ -185,15 +187,18 @@ def maximize_incremental_profit_j(params,customer_j,customers):
 	px_ub = p_max
 	pp_lb = 0
 	pp_ub = k_delta_j_max*p_max/(1 + delta_small)
-	initial_guess = [(1+c_op)/2,k_delta_j_max*(1+c_op)/2]
+	initial_guess = [min(px_ub,max(px_lb,(1+c_op)/2)),min(pp_ub,max(pp_lb,k_delta_j_max*(1+c_op)/(2*(1+delta_small))))]
+	# print('initial_guess',initial_guess,'px_lb',px_lb,'px_ub',px_ub,'pp_lb',pp_lb,'pp_ub',pp_ub)
 	assert px_lb <= initial_guess[0] <= px_ub
 	assert pp_lb <= initial_guess[1] <= pp_ub
-	print('initial_guess',initial_guess)
+	# print('initial_guess',initial_guess)
 	profit = incremental_profit_j_single_destination(initial_guess,delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier, customer_j,customers)
 	profit_surface = None
+	p_x_opt = initial_guess[0]
+	p_p_opt = initial_guess[1]
 
 	if solver_type == 'gridsearch':
-		print('\nUsing Gridsearch:')
+		# print('\nUsing Gridsearch:')
 		px_gridsearch_num = int((p_max-c_op)/gridsearch_resolution)
 		pp_gridsearch_num = int((pp_ub - pp_lb)/gridsearch_resolution)
 		px_gridvals = np.linspace(px_lb,px_ub,num=px_gridsearch_num)
@@ -220,7 +225,7 @@ if __name__=='__main__':
 
 	params['s1'] 	= np.array([0,0])
 	params['d'] 	= np.array([2.5,0])
-	params['s2'] 	= np.array([1,1])
+	params['s2'] 	= np.array([1,3])
 
 	customers = {1:{},2:{}} #for 2 customers
 	customers[1]['s'] = params['s1']
@@ -246,7 +251,7 @@ if __name__=='__main__':
 	[profit,prices,profit_surface] = maximize_incremental_profit_j(params,customer_j,customers)
 	print('profit',profit,'prices',prices)
 	print('pricing constraint should be positive: ',pricing_feasibility_constraint([prices['p_x'],prices['p_p']],params['delta_small'],customers[customer_j]['k_delta_max']))	
-
+	print(incremental_profit_j_single_destination_components([prices['p_x'],prices['p_p']],params['delta_small'],params['c_op'],params['support_v'],params['EEPP_coeff'],params['degradation_multiplier'],customer_j,customers))
 
 	# 	prob_exclusive_val,prob_pool_val,profit_exclusive_val,profit_pool_val = profit_1_components([prices['p_x'],prices['p_p']],params['delta_small'],s1d1,params['c_op'],params['support_v'])
 	# 	print('prob exclusive: ',prob_exclusive_val,'prob pool: ',prob_pool_val,'profit exclusive: ',profit_exclusive_val,'profit pool: ',profit_pool_val)

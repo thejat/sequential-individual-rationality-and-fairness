@@ -26,7 +26,7 @@ params['p_p_1'] = .6
 
 
 #Constants for Optimization
-params['gridsearch_resolution'] = .01
+params['gridsearch_resolution'] = .05
 params['solver_type'] = 'gridsearch'
 
 #Constants for Experiment
@@ -46,8 +46,8 @@ params['all_data_keys'] = [
 	'expost_penalty',
 	'pp',
 	'px',
-	'profitvals_choose_pool_vs_nothing',
-	'profitvals_choose_exclu_vs_nothing',
+	'profitvals_choose_pool',
+	'profitvals_choose_exclu',
 	'profitvals_choose_exclu_vs_pool',
 	'profitvals_choose_exclu_vs_pool_sign',
 	'prob_pool',
