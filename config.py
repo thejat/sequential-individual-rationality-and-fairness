@@ -24,10 +24,14 @@ params['degradation_multiplier'] = 4
 params['EEPP_coeff'] = 1
 params['p_s_1'] = .6
 
-
 #Constants for Optimization
-params['gridsearch_resolution'] = .05
 params['solver_type'] = 'gridsearch'
+params['gridsearch_resolution'] = .05
+
+
+
+
+
 
 #Constants for Experiment
 #####Customer 2's location grid

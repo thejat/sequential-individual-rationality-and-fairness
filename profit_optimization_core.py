@@ -99,7 +99,7 @@ def prob_pool_j(p_x,p_s,delta_bar,support_v,k_delta_bar,flag_print_arguments=Fal
 		return 0
 	prob_pool_val = F_v(v_ubar,support_v) - F_v(v_lbar,support_v)
 
-	return min(max(0,prob_pool_val),1)
+	return min(max(0,prob_pool_val),1),v_ubar,v_lbar
 
 def last_customer_picked_up(active_customer_idxes):
 	'''
@@ -240,14 +240,14 @@ def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degrad
 
 	prob_exclusive_val = prob_exclusive_j(p_x,p_s,customers[customer_j]['delta_bar'],support_v,customers[customer_j]['k_delta_bar'])
 
-	prob_pool_val = prob_pool_j(p_x,p_s,customers[customer_j]['delta_bar'],support_v,customers[customer_j]['k_delta_bar'])
+	prob_pool_val,tempa,tempb = prob_pool_j(p_x,p_s,customers[customer_j]['delta_bar'],support_v,customers[customer_j]['k_delta_bar'])
 
 	incr_profit_exclusive_val = (p_x - c_op)*customers[customer_j]['sd']
 
 
 	expost_penalty_sum = 0
 	for idx in customers:
-		expost_penalty_sum += get_incremental_penalty(customers,idx)
+		expost_penalty_sum += get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v)
 
 	incr_profit_pool_val = p_s*customers[customer_j]['sd']*(1 + customers[customer_j]['actual_detour_w_j']) \
 		+ (sum_previous_customer_shared_prices(customers,1)-c_op)*source_detour_for_j(customers) \
@@ -258,106 +258,105 @@ def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degrad
 
 	return (prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
 
+def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v):
 
-#=========================================
+	if idx == len(customers):
+		p_x = x[0]
+		p_s = x[1]
+	else:
+		p_x = customers[idx]['p_x']
+		p_s = customers[idx]['p_s']
 
-def get_incremental_penalty(customers,idx):
+	delta_ijm1 = customers[idx]['actual_detour_wo_j']
+	delta_ij = customers[idx]['actual_detour_w_j']
 
+	k_delta_ijm1 = degradation(delta_ijm1,degradation_multiplier)
+	k_delta_ij = degradation(delta_ij,degradation_multiplier)
+
+	v_ubar_before_j = p_s*(1+delta_ijm1)/k_delta_ijm1
+	v_ubar_after_j = p_s*(1+delta_ij)/k_delta_ij
+
+	prob_pool_val,v_ubar,v_lbar =  prob_pool_j(p_x,p_s,customers[idx]['delta_bar'],support_v,customers[idx]['k_delta_bar']):
 
 	if customers[idx]['is_bootstrapped'] is True:
-		# v_ub change
 
 		'''
-		only called when customer 2 chooses pool
-		customer 1's ex post IR constraint if customer 2 decides to pool
 		different from other customer's expected ex post penalties
-		NEED TO CHECK: TBD INCREMENTAL if more than {1,2,destination}
+		expectation conditioned on ex ante IR being satisfied
 		'''
-		# expectation conditioned on ex ante IR being satisfied
 
-		# def expost_customer1_integration_lowerbound(p_p_1,delta_small,k_delta_1):
-		# 	lb = p_p_1*(1 + delta_small)/k_delta_1
-		# 	return lb
+		v_ubar = support_v[1]
+
+	term1ub = min(v_ubar_before_j,v_ubar)
+	term1lb = min(v_ubar_before_j,v_lbar)
+	term1nr = integrate.quad(lambda vvar: customers[idx]['sd']*f_v(vvar,support_v)*(k_delta_ijm1*vvar - p_s*(1 + delta_ijm1)),
+			term1lb,
+			term1ub)
 
 
-		# lb = expost_customer1_integration_lowerbound(p_p_1,delta_small,k_delta_1_max)
+	term2ub = min(v_ubar_after_j,v_ubar)
+	term2lb = min(v_ubar_after_j,v_lbar)
+	term2nr = integrate.quad(lambda vvar: customers[idx]['sd']*f_v(vvar,support_v)*(k_delta_ij*vvar - p_s*(1 + delta_ij)),
+			term2lb,
+			term2ub)
 
-		# # k_delta_1 is a function of delta_1 and can change
+	expected_ex_post_penalty = (term1nr + term2nr)/(prob_pool_val + 1e-8)
 
-		# expected_ex_post_penalty_cust1 = integrate.quad(lambda v1var: f_v(v1var,support_v)*max(0,-( k_delta_1*v1var*s1d - p_p_1*(s1d + delta_1))),min(max(support_v[0],lb),support_v[1]),support_v[1]) 
-		# # print('expected ex post customer 1 IR penalty:',expected_ir_1_post_penalty[0])
+	return expected_ex_post_penalty
 
-		# return expected_ex_post_penalty_cust1[0]
-
-		return 0
-
-	else:
-
-		# def sum_EEPPs(customer_j,customers,support_v,delta_small,degradation_multiplier):
-		# 	active_customer_idxes = active_customers_j(customers)
-		# 	summed_val = 0
-		# 	for idx in active_customer_idxes:
-		# 		if idx ==1: #our first customer is indexed from 1 and NOT 0
-		# 			delta_1 = get_detour_two_customers_common_destination(customers[1],customers[2]) #based on actual detour, not cust[1]['delta_max']
-		# 			k_delta_1 = degradation(delta_1,customers[1]['sd'],degradation_multiplier)
-		# 			summed_val += get_cumulative_expected_ex_post_penalty_customer1(customers[1]['sd'],support_v,customers[1]['p_p'],delta_1,delta_small,k_delta_1,customers[1]['k_delta_max']) #HARDCODED BUT NEEDS TO CHANGE
-		# 		else:
-		# 			summed_val += 0 #TBD
-
-		# 	return summed_val
-
-		return 0
-
-def maximize_incremental_profit_j(params,customer_j,customers):
+def maximize_incremental_profit_j(params,customers):
 
 	solver_type = params['solver_type']
 	c_op =	params['c_op']
-	p_max =	params['p_max']
+	p_x_max =	params['p_x_max']
 	EEPP_coeff = params['EEPP_coeff']
 	gridsearch_resolution = params['gridsearch_resolution']
-	delta_small = params['delta_small']
 	support_v = params['support_v']
 	degradation_multiplier = params['degradation_multiplier']
 
-	sjdj = customers[customer_j]['sd']
-	k_delta_j_max = customers[customer_j]['k_delta_max']
+	customer_j = len(customers)
+	delta_bar = customers[customer_j]['delta_bar']
+	k_delta_bar = customers[customer_j]['k_delta_bar']
 
 	px_lb = c_op
-	px_ub = p_max
-	pp_lb = 0
-	pp_ub = k_delta_j_max*p_max/(1 + delta_small)
-	initial_guess = [min(px_ub,max(px_lb,(1+c_op)/2)),min(pp_ub,max(pp_lb,k_delta_j_max*(1+c_op)/(2*(1+delta_small))))]
-	# print('initial_guess',initial_guess,'px_lb',px_lb,'px_ub',px_ub,'pp_lb',pp_lb,'pp_ub',pp_ub)
+	px_ub = p_x_max
+	ps_lb = 0
+	ps_ub = k_delta_bar*px_ub/(1 + delta_bar)
+	initial_guess = [min(px_ub,max(px_lb,(1+c_op)/2)),min(ps_ub,max(ps_lb,k_delta_bar*(1+c_op)/(2*(1+delta_bar))))]
 	assert px_lb <= initial_guess[0] <= px_ub
 	assert pp_lb <= initial_guess[1] <= pp_ub
-	# print('initial_guess',initial_guess)
-	profit = incremental_profit_j_single_destination(initial_guess,delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier, customer_j,customers)
+
+	t_j = opt_customer_to_drop_after_j(customers)
+
+	profit = get_incremental_profit_adding_j(initial_guess,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j)
+
 	profit_surface = None
 	p_x_opt = initial_guess[0]
-	p_p_opt = initial_guess[1]
+	p_s_opt = initial_guess[1]
 
 	if solver_type == 'gridsearch':
 		# print('\nUsing Gridsearch:')
-		px_gridsearch_num = int((p_max-c_op)/gridsearch_resolution)
-		pp_gridsearch_num = int((pp_ub - pp_lb)/gridsearch_resolution)
+		px_gridsearch_num = int((px_ub-px_lb)/gridsearch_resolution)
+		ps_gridsearch_num = int((ps_ub - ps_lb)/gridsearch_resolution)
 		px_gridvals = np.linspace(px_lb,px_ub,num=px_gridsearch_num)
-		pp_gridvals = np.linspace(pp_lb,pp_ub,num=pp_gridsearch_num)
-		profit_surface = np.zeros((px_gridsearch_num,pp_gridsearch_num))
+		ps_gridvals = np.linspace(ps_lb,ps_ub,num=ps_gridsearch_num)
+		profit_surface = np.zeros((px_gridsearch_num,ps_gridsearch_num))
 
 		for idxx,p_x_var in enumerate(px_gridvals):
-			for idxp,p_p_var in enumerate(pp_gridvals):
-				if pricing_feasibility_constraint([p_x_var,p_p_var],delta_small,k_delta_j_max) >= 0:
+			for idxs,p_s_var in enumerate(ps_gridvals):
+				if pricing_feasibility_constraint([p_x_var,p_s_var],delta_bar,k_delta_bar) >= 0:
 
-					profit_var = incremental_profit_j_single_destination([p_x_var,p_p_var],delta_small,c_op,support_v,EEPP_coeff,degradation_multiplier,customer_j,customers)
-					profit_surface[idxx,idxp] = profit_var
+					profit_var = get_incremental_profit_adding_j([p_x_var,p_s_var],customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j)
+
+					profit_surface[idxx,idxs] = profit_var
 					if profit_var > profit:
 						profit = profit_var
 						p_x_opt = p_x_var
-						p_p_opt = p_p_var
+						p_s_opt = p_s_var
 	else:
 		print('NO SOLVER!')
 
-	return (profit,{'p_x':p_x_opt,'p_p':p_p_opt},profit_surface)
+	return (profit,{'p_x':p_x_opt,'p_s':p_s_opt},profit_surface)
 
 #=========================================
 
@@ -398,5 +397,5 @@ if __name__=='__main__':
 	customers = set_actual_detours_w_j(customers,opt_customer_to_drop_after_j(customers))
 	print(customers)
 
-	# [incremental_profit_j,prices_j,incremental_profit_j_surface] = maximize_incremental_profit_j(params,customer_j,customers)
-	# print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
+	[incremental_profit_j,prices_j,incremental_profit_j_surface] = maximize_incremental_profit_j(params,customers)
+	print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
