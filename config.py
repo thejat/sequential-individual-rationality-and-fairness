@@ -17,12 +17,12 @@ plt.rcParams['figure.titlesize']= 30
 #Constants for Model
 params = {}
 params['c_op'] 	=  0.3  #operational cost per unit time
-params['delta_small'] =  0.3  #fixed promise by the firm
+params['delta_same'] =  0.3  #fixed promise by the firm
 params['support_v'] = (0,1)
-params['p_max'] = params['support_v'][1]	#maximum price that the firm charges
+params['p_s_max'] = params['support_v'][1]	#maximum price that the firm charges
 params['degradation_multiplier'] = 4
 params['EEPP_coeff'] = 1
-params['p_p_1'] = .6
+params['p_s_1'] = .6
 
 
 #Constants for Optimization

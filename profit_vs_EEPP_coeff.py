@@ -34,7 +34,7 @@ def opt_profits_given_multiplier(params):
 		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d']) #the drive by distance between customer idx and their destination
 		customers[idx]['delta_max'] = params['delta_small']*customers[idx]['sd']
 		customers[idx]['k_delta_max'] = degradation(customers[idx]['delta_max'],customers[idx]['sd'],params['degradation_multiplier'])
-	assert_ex_ante_customer1_IR(params['support_v'][1],customers[1]['p_p'],params['delta_small'],customers[1]['k_delta_max'],customers[1]['delta_max'],customers[1]['sd'])
+	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_p'],params['delta_small'],customers[1]['k_delta_max'],customers[1]['delta_max'],customers[1]['sd'])
 
 
 	customer_j = 2 # i.e., j = 2
