@@ -41,7 +41,8 @@ params['y_max'] = 40
 params['xvals'] = np.array(list(range(params['x_min'],params['x_max'],1)))/10
 params['yvals'] = np.array(list(range(-params['y_max'],params['y_max'],1)))/10
 #####for profit vs EEPP_coeff
-params['multiprocessing'] = True
+params['multiprocessing'] = False
+params['scenario'] = 'sdsd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 params['nprocesses'] = 8
 params['pb0_xlim'] = [-2.7,4.3]
 params['pb0_ylim'] = [-3.1,3.1]
@@ -61,12 +62,14 @@ params['all_data_keys'] = [
 	'circle_delta_1_bar',
 	'circle_s1d',
 	'circle_test1',
-	'circle_test3']
+	'circle_test3',
+	't_j']
 params['plot_keys00'] = [
 	'profitval',
 	'expost_penalty',
 	'profitval_and_prob_pool',
-	'profitval_and_prob_pool_and_delta1max']
+	'profitval_and_prob_pool_and_delta1max',
+	't_j']
 params['plot_keys01'] = [
 	'prob_pool',
 	'prob_exclusive',

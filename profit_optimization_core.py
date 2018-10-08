@@ -225,17 +225,21 @@ def opt_customer_to_drop_after_j(customers):
 			opt_route_cost = new_route_cost
 			t_j = idx + 1
 
-	return t_j
+	# print('returned t_j',t_j)
+	return t_j,t_j #TODO: return the new route data structure
 
 def sum_previous_customer_shared_prices(customers,start_idx):
 	summed_p_s = 0
 	active_customer_idxes = active_customers_j(customers)
 	for idx in active_customer_idxes:
+		# print('sum call: idx',idx,'start_idx',start_idx)
 		if idx >= start_idx:
 			summed_p_s += customers[idx]['p_s']
 	return summed_p_s
 
 def get_incremental_profit_adding_j(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j):
+
+	# print('profit eval AA t_j',t_j)
 
 	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j)
 
@@ -260,6 +264,7 @@ def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degrad
 	for idx in customers:
 		expost_penalty_sum += get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v)
 
+	# print('profit eval BB t_j',t_j)
 	incr_profit_pool_val = p_s*customers[customer_j]['sd']*(1 + customers[customer_j]['actual_detour_w_j']) \
 		+ (sum_previous_customer_shared_prices(customers,1)-c_op)*source_detour_for_j(customers) \
 		+ (sum_previous_customer_shared_prices(customers,t_j)-c_op)*destination_detour_for_j(customers,t_j) \
@@ -337,8 +342,9 @@ def maximize_incremental_profit_j(params,customers):
 	assert px_lb <= initial_guess[0] <= px_ub
 	assert ps_lb <= initial_guess[1] <= ps_ub
 
-	t_j = opt_customer_to_drop_after_j(customers)
-	customers = set_actual_detours_w_j(customers,opt_customer_to_drop_after_j(customers))
+	t_j,temp_route = opt_customer_to_drop_after_j(customers)
+	# print('t_j',t_j)
+	customers = set_actual_detours_w_j(customers,t_j)
 
 	profit = get_incremental_profit_adding_j(initial_guess,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j)
 
@@ -374,15 +380,22 @@ def maximize_incremental_profit_j(params,customers):
 
 if __name__=='__main__':
 
+
+	print('Run scenario: ',params['scenario'])
+
 	customers = OrderedDict()
 	customers[1] = {}
-	customers[2] = {}
 	customers[1]['s'] = np.array([0,0])
 	customers[1]['d'] = np.array([2.5,0])
-	customers[2]['s'] = np.array([2,0])
-	customers[2]['d'] = customers[1]['d'] #np.array([2.1,0]) #
 	customers[1]['p_s'] = params['p_s_1']
 	customers[1]['p_x'] = params['support_v'][1]
+
+	customers[2] = {}	
+	customers[2]['s'] = np.array([1,.5])
+	if params['scenario']=='ssd':
+		customers[2]['d'] = customers[1]['d']
+	elif params['scenario']=='sdsd':
+		customers[2]['d'] = np.array([2,-.5])
 
 	for idx in customers:
 		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
@@ -401,10 +414,10 @@ if __name__=='__main__':
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
 	print(customer_j,active_customer_idxes)
-	customers = set_actual_detours_w_j(customers,opt_customer_to_drop_after_j(customers))
+	t_j,temp_route = opt_customer_to_drop_after_j(customers)
+	customers = set_actual_detours_w_j(customers,t_j)
 	print(customers)
-
-	# print(opt_customer_to_drop_after_j(customers))
+	print('t_j',t_j,'temp_route',temp_route)
 
 	[incremental_profit_j,prices_j,incremental_profit_j_surface] = maximize_incremental_profit_j(params,customers)
 	print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
