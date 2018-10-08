@@ -19,10 +19,10 @@ params = {}
 params['c_op'] 	=  0.3  #operational cost per unit time
 params['delta_same'] =  0.3  #fixed promise by the firm
 params['support_v'] = (0,1)
-params['p_s_max'] = params['support_v'][1]	#maximum price that the firm charges
-params['degradation_multiplier'] = 4
+params['p_x_max'] = params['support_v'][1]	#maximum price that the firm charges
+params['degradation_multiplier'] = 3
 params['EEPP_coeff'] = 1
-params['p_s_1'] = .6
+params['p_s_1'] = 0.35
 
 #Constants for Optimization
 params['solver_type'] = 'gridsearch'
@@ -41,14 +41,14 @@ params['y_max'] = 40
 params['xvals'] = np.array(list(range(params['x_min'],params['x_max'],1)))/10
 params['yvals'] = np.array(list(range(-params['y_max'],params['y_max'],1)))/10
 #####for profit vs EEPP_coeff
-params['multiprocessing'] = False
+params['multiprocessing'] = True
 params['nprocesses'] = 8
 params['pb0_xlim'] = [-2.7,4.3]
 params['pb0_ylim'] = [-3.1,3.1]
 params['all_data_keys'] = [
 	'profitval',
 	'expost_penalty',
-	'pp',
+	'ps',
 	'px',
 	'profitvals_choose_pool',
 	'profitvals_choose_exclu',
@@ -58,7 +58,7 @@ params['all_data_keys'] = [
 	'prob_exclusive',
 	'prob_nothing',
 	'profitval_and_prob_pool',
-	'circle_delta_1_max',
+	'circle_delta_1_bar',
 	'circle_s1d',
 	'circle_test1',
 	'circle_test3']
@@ -71,4 +71,4 @@ params['plot_keys01'] = [
 	'prob_pool',
 	'prob_exclusive',
 	'prob_nothing']
-params['plot_keys02'] = ['pp','px']
+params['plot_keys02'] = ['ps','px']
