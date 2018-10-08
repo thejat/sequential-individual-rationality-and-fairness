@@ -154,7 +154,7 @@ def destination_detour_for_j(customers,t_j):
 								+ distance(customers[customer_j]['d'],customers[t_j]['d']) \
 								- distance(customers[t_j]['d'],customers[customer_j]['d'])
 	else:
-		destination_detour_val = 0
+		destination_detour_val = distance(customers[active_customer_idxes[-1]]['d'],customers[customer_j]['d'])
 
 	return destination_detour_val
 
