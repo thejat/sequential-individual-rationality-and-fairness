@@ -60,16 +60,28 @@ params['all_data_keys'] = [
 	'prob_nothing',
 	'profitval_and_prob_pool',
 	'circle_delta_1_bar',
+	'circle_delta_2_bar',
 	'circle_s1d',
 	'circle_test1',
 	'circle_test3',
-	't_j']
+	't_j',
+	'profitval_and_prob_pool_and_delta1bar',
+	'circle_delta_bars_intersection',
+	'circle_delta_1_bar_region',
+	'circle_delta_2_bar_region']
+
 params['plot_keys00'] = [
 	'profitval',
 	'expost_penalty',
 	'profitval_and_prob_pool',
-	'profitval_and_prob_pool_and_delta1max',
-	't_j']
+	'profitval_and_prob_pool_and_delta1bar',
+	't_j',
+	'circle_delta_1_bar',
+	'circle_delta_2_bar',
+	'circle_delta_bars_intersection',
+	'circle_delta_1_bar_region',
+	'circle_delta_2_bar_region'
+	]
 params['plot_keys01'] = [
 	'prob_pool',
 	'prob_exclusive',

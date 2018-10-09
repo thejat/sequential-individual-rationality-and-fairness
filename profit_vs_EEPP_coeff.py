@@ -137,14 +137,30 @@ def opt_profits_given_multiplier(params):
 			data['prob_nothing'][idxi,idxj] = 1 - prob_pool_val - prob_exclusive_val
 			data['t_j'][idxi,idxj] = t_j
 
-			data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(distance(customers[1]['s'],customers[2]['s']) + distance(customers[2]['s'],customers[1]['d']) - (1 +customers[1]['delta_bar'])*customers[1]['sd']) < 5e-2) #HARDCODE
+			threshold_circle = 1e-1
+			if t_j ==2:
+				data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(source_detour_for_j(customers) - customers[1]['delta_bar']*customers[1]['sd']) < threshold_circle) #HARDCODE
 
-			data['circle_s1d'][idxi,idxj] = indicator_of(abs(distance(np.array([i,j]),customers[1]['s']) -customers[1]['sd']) < 1e-2)
+				data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(distance(customers[2]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd']) < threshold_circle) #HARDCODE
+
+				data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(source_detour_for_j(customers) - customers[1]['delta_bar']*customers[1]['sd'] < 0) #HARDCODE
+
+				data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(distance(customers[2]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd'] < 0) #HARDCODE
+			else:
+				data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j) - customers[1]['delta_bar']*customers[1]['sd']) < threshold_circle)
+				data['circle_delta_2_bar'][idxi,idxj] = 0
+			
+				data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j) - customers[1]['delta_bar']*customers[1]['sd'] < 0)
+				data['circle_delta_2_bar_region'][idxi,idxj] = 1
+
+			data['circle_s1d'][idxi,idxj] = indicator_of(abs(distance(np.array([i,j]),customers[1]['s']) -customers[1]['sd']) < threshold_circle)
 
 	data['profitval_and_prob_pool'] = data['profitval']*np.sign(data['prob_pool'])#-np.min(data['prob_pool'])
 	temp1 = .1 + data['profitval_and_prob_pool']
 	temp2 = 1 - data['circle_delta_1_bar']
-	data['profitval_and_prob_pool_and_delta1max'] = temp1*temp2
+	temp3 = 1 - data['circle_delta_2_bar']
+	data['profitval_and_prob_pool_and_delta1bar'] = temp1*temp2*temp3
+	data['circle_delta_bars_intersection'] = data['circle_delta_1_bar_region']*data['circle_delta_2_bar_region']
 
 	return {'data':data,'params':params,'customers':customers}
 	# pickle.dump(all_data,open('./output/all_data.pkl','wb'))
@@ -153,6 +169,7 @@ def plot_data(data_params_customers,EEPP_coeff):
 	data = data_params_customers['data']
 	params = data_params_customers['params']
 	customers = data_params_customers['customers']
+
 	s1x,s1y = idx_of_point(params['xvals'],params['yvals'],customers[1]['s'])
 	d1x,d1y = idx_of_point(params['xvals'],params['yvals'],customers[1]['d'])
 	s2x,s2y = idx_of_point(params['xvals'],params['yvals'],customers[2]['s'])
