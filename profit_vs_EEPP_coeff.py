@@ -55,8 +55,6 @@ def idx_of_point(xvals,yvals,point):
 			break
 	return idx_valx,idx_valy
 
-
-
 def opt_profits_given_multiplier(params):
 
 	#Logging data initialize
@@ -155,6 +153,14 @@ def opt_profits_given_multiplier(params):
 
 			data['circle_s1d'][idxi,idxj] = indicator_of(abs(distance(np.array([i,j]),customers[1]['s']) -customers[1]['sd']) < threshold_circle)
 
+			if params['scenario'] == 'ssd':
+				temp_penalty = get_incremental_penalty([customers[1]['p_x'],customers[1]['p_s']],customers,1,params['degradation_multiplier'],params['support_v'])
+				data['foc_condition'][idxi,idxj] = (1/customers[2]['sd'])*((customers[1]['p_s']-params['c_op'])*(distance(customers[1]['s'],customers[2]['s']) + customers[2]['sd'] - customers[1]['sd']) -EEPP_coeff*temp_penalty)/(customers[2]['k_delta_bar']) + params['c_op']
+
+				data['foc_condition_boundary_overlay_prob_pool'][idxi,idxj] = data['prob_pool'][idxi,idxj]*(1-indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle/2))
+
+
+
 	data['profitval_and_prob_pool'] = data['profitval']*np.sign(data['prob_pool'])#-np.min(data['prob_pool'])
 	temp1 = .1 + data['profitval_and_prob_pool']
 	temp2 = 1 - data['circle_delta_1_bar']
@@ -217,6 +223,7 @@ def plot_data(data_params_customers,EEPP_coeff):
 
 if __name__=='__main__':
 	params['start_time'] = time.time()
+	print('Run scenario: ',params['scenario'])
 
 	EEPP_coeff_array = [.5] #[0.25,.5,1,2]
 

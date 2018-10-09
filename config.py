@@ -43,7 +43,7 @@ params['xvals'] = np.array(list(range(params['x_min'],params['x_max'],1)))/10
 params['yvals'] = np.array(list(range(-params['y_min'],params['y_max'],1)))/10
 #####for profit vs EEPP_coeff
 params['multiprocessing'] = False
-params['scenario'] = 'sdsd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'ssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 params['nprocesses'] = 8
 params['all_data_keys'] = [
 	'profitval',
@@ -67,7 +67,9 @@ params['all_data_keys'] = [
 	'profitval_and_prob_pool_and_delta1bar',
 	'circle_delta_bars_intersection',
 	'circle_delta_1_bar_region',
-	'circle_delta_2_bar_region']
+	'circle_delta_2_bar_region',
+	'foc_condition',
+	'foc_condition_boundary_overlay_prob_pool']
 
 params['plot_keys00'] = [
 	'profitval',
@@ -79,7 +81,9 @@ params['plot_keys00'] = [
 	'circle_delta_2_bar',
 	'circle_delta_bars_intersection',
 	'circle_delta_1_bar_region',
-	'circle_delta_2_bar_region'
+	'circle_delta_2_bar_region',
+	'foc_condition',
+	'foc_condition_boundary_overlay_prob_pool'	
 	]
 params['plot_keys01'] = [
 	'prob_pool',

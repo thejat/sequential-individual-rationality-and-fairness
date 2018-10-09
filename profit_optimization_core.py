@@ -376,54 +376,103 @@ def maximize_incremental_profit_j(params,customers):
 
 	return (profit,{'p_x':p_x_opt,'p_s':p_s_opt},profit_surface)
 
+def update_detours(customers):
+	return customers
+
 #=========================================
 
 if __name__=='__main__':
 
 
+	params['scenario'] = 'sssd'
+
 	print('Run scenario: ',params['scenario'])
 
+	#Initialize customer 1
 	customers = OrderedDict()
 	customers[1] = {}
 	customers[1]['s'] = np.array([0,0])
 	customers[1]['d'] = np.array([2.5,0])
 	customers[1]['p_s'] = params['p_s_1']
 	customers[1]['p_x'] = params['support_v'][1]
+	customers[1]['is_bootstrapped'] = True
+	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'])
 
+	#Initialize customer 2
 	customers[2] = {}	
 	customers[2]['s'] = np.array([1,.5])
-	if params['scenario']=='ssd':
+	if params['scenario']=='ssd' or params['scenario']=='sssd':
 		customers[2]['d'] = customers[1]['d']
 	elif params['scenario']=='sdsd':
 		customers[2]['d'] = np.array([2,-.5])
 
+
+	#Initialization for customers 1 and 2
 	for idx in customers:
 		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
 		customers[idx]['delta_bar'] = params['delta_same']
 		customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'])
 		customers[idx]['actual_detour_wo_j'] = 0
-		customers[idx]['is_bootstrapped'] = False
+		if idx !=1:
+			customers[idx]['is_bootstrapped'] = False
 
-		print('customer ',idx,': sd',customers[idx]['sd'],'delta_bar',customers[idx]['delta_bar'],'k_delta_bar',customers[idx]['k_delta_bar'])
-
-	customers[1]['is_bootstrapped'] = True
-	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'])
 	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_s'],customers[1]['delta_bar'],customers[1]['k_delta_bar'],customers[1]['sd'])
 
 
+	#Solving for prices for customer 2
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
-	print(customer_j,active_customer_idxes)
 	t_j,temp_route = opt_customer_to_drop_after_j(customers)
 	customers = set_actual_detours_w_j(customers,t_j)
-	print(customers)
-	print('t_j',t_j,'temp_route',temp_route)
-
 	[incremental_profit_j,prices_j,incremental_profit_j_surface] = maximize_incremental_profit_j(params,customers)
+
+	print('customer_j',customer_j,'active_customer_idxes',active_customer_idxes)
+	for idx in customers:
+		print('customer ',idx,': sd',customers[idx]['sd'],'delta_bar',customers[idx]['delta_bar'],'k_delta_bar',customers[idx]['k_delta_bar'],'wo_j',customers[idx]['actual_detour_wo_j'],'w_j',customers[idx]['actual_detour_w_j'])
+	print('t_j',t_j,'temp_route',temp_route)
+	# print(customers)
 	print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
 
 
-	for idx in customers:
-		print(idx,'wo_j',customers[idx]['actual_detour_wo_j'],'w_j',customers[idx]['actual_detour_w_j'])
 
-	print(get_incremental_penalty([customers[1]['p_x'],customers[1]['p_s']],customers,1,params['degradation_multiplier'],params['support_v']))
+	if params['scenario']=='sssd':
+
+		customers[2]['p_s'] = prices_j['p_x']
+		customers[2]['p_x'] = prices_j['p_s']
+
+		customers = update_detours(customers)
+
+
+		#Initialize customer 3		
+		customers[3] = {}
+		customers[3]['s'] = np.array([1.7,-.3])
+		customers[3]['d'] = customers[1]['d']
+
+
+		#REPEATED AND SLIGHTLY MODIFIED 1
+		for idx in [3]:
+			customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
+			customers[idx]['delta_bar'] = params['delta_same']
+			customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'])
+			customers[idx]['actual_detour_wo_j'] = 0
+			if idx !=1:
+				customers[idx]['is_bootstrapped'] = False
+
+
+
+		#REPEATED 2
+		customer_j = len(customers)
+		active_customer_idxes = active_customers_j(customers)
+		t_j,temp_route = opt_customer_to_drop_after_j(customers)
+		customers = set_actual_detours_w_j(customers,t_j)
+
+		print('customer_j',customer_j,'active_customer_idxes',active_customer_idxes)
+		for idx in customers:
+			print('customer ',idx,': sd',customers[idx]['sd'],'delta_bar',customers[idx]['delta_bar'],'k_delta_bar',customers[idx]['k_delta_bar'],'wo_j',customers[idx]['actual_detour_wo_j'],'w_j',customers[idx]['actual_detour_w_j'])
+		print('t_j',t_j,'temp_route',temp_route)
+		# print(customers)
+
+		[incremental_profit_j,prices_j,incremental_profit_j_surface] = maximize_incremental_profit_j(params,customers)
+		print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
+
+
