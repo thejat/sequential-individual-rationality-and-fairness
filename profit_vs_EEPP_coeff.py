@@ -86,7 +86,7 @@ def opt_profits_given_multiplier(params):
 
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
-	customers[2]['s'] = np.array([customers[1]['d'][0]/2,.5])
+	customers[2]['s'] = np.array([customers[1]['d'][0]/2,3])
 	customers[2]['d'] = customers[1]['d']
 
 	for idxi,i in enumerate(params['xvals']):

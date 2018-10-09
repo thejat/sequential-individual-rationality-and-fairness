@@ -37,15 +37,14 @@ params['gridsearch_resolution'] = .05
 #####Customer 2's location grid
 params['x_min'] = -28
 params['x_max'] = 52
-params['y_max'] = 40
+params['y_min'] = 40
+params['y_max'] = 70 #40
 params['xvals'] = np.array(list(range(params['x_min'],params['x_max'],1)))/10
-params['yvals'] = np.array(list(range(-params['y_max'],params['y_max'],1)))/10
+params['yvals'] = np.array(list(range(-params['y_min'],params['y_max'],1)))/10
 #####for profit vs EEPP_coeff
 params['multiprocessing'] = False
 params['scenario'] = 'sdsd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 params['nprocesses'] = 8
-params['pb0_xlim'] = [-2.7,4.3]
-params['pb0_ylim'] = [-3.1,3.1]
 params['all_data_keys'] = [
 	'profitval',
 	'expost_penalty',
