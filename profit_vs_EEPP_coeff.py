@@ -65,8 +65,8 @@ def opt_profits_given_multiplier(params):
 	#Customer 1 initialize
 	customers = OrderedDict()
 	customers[1] = {}
-	customers[1]['s'] = np.array([0,0])
-	customers[1]['d'] = np.array([2.5,0])
+	customers[1]['s'] = np.array([3,0])
+	customers[1]['d'] = np.array([-3,0])
 	customers[1]['p_s'] = params['p_s_1']
 	customers[1]['p_x'] = params['support_v'][1]
 
@@ -227,8 +227,9 @@ if __name__=='__main__':
 	params['start_time'] = time.time()
 	print('Run scenario: ',params['scenario'])
 
-	EEPP_coeff_array = [.25] #[.5] #[0.25,.5,1,2]
+	EEPP_coeff_array = [params['EEPP_coeff']] #[.5] #[0.25,.5,1,2]
 
+	print('EEPP_coeff_array is',EEPP_coeff_array)
 
 	if params['multiprocessing'] is True:
 		plist = []

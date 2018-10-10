@@ -16,12 +16,12 @@ plt.rcParams['figure.titlesize']= 30
 
 #Constants for Model
 params = {}
-params['c_op'] 	=  0.3  #operational cost per unit time
-params['delta_same'] =  0.3  #fixed promise by the firm
+params['c_op'] 	=  0.32  #operational cost per unit time
+params['delta_same'] =  0.54  #fixed promise by the firm
 params['support_v'] = (0,1)
 params['p_x_max'] = params['support_v'][1]	#maximum price that the firm charges
 params['degradation_multiplier'] = 3
-params['EEPP_coeff'] = 1
+params['EEPP_coeff'] = 3
 params['p_s_1'] = 0.35
 
 #Constants for Optimization
@@ -35,12 +35,12 @@ params['gridsearch_resolution'] = .05
 
 #Constants for Experiment
 #####Customer 2's location grid
-params['x_min'] = -28
-params['x_max'] = 52
-params['y_min'] = 40
+params['x_min'] = -50
+params['x_max'] = 80
+params['y_min'] = -70
 params['y_max'] = 70 #40
 params['xvals'] = np.array(list(range(params['x_min'],params['x_max'],1)))/10
-params['yvals'] = np.array(list(range(-params['y_min'],params['y_max'],1)))/10
+params['yvals'] = np.array(list(range(params['y_min'],params['y_max'],1)))/10
 #####for profit vs EEPP_coeff
 params['multiprocessing'] = False
 params['scenario'] = 'ssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
