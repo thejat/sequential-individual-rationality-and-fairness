@@ -69,6 +69,7 @@ params['all_data_keys'] = [
 	'circle_delta_1_bar_region',
 	'circle_delta_2_bar_region',
 	'foc_condition',
+	'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool']
 
 params['plot_keys00'] = [
@@ -83,6 +84,7 @@ params['plot_keys00'] = [
 	'circle_delta_1_bar_region',
 	'circle_delta_2_bar_region',
 	'foc_condition',
+	'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool'	
 	]
 params['plot_keys01'] = [

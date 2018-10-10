@@ -314,7 +314,7 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v):
 			term2lb,
 			term2ub)
 
-	# print('term1',term1nr[0],'term1',term2nr[0],'denominator',prob_pool_val)
+	print('term1',term1nr[0],'term1',term2nr[0],'denominator',prob_pool_val)
 	expected_ex_post_penalty = (term1nr[0] - term2nr[0])/(prob_pool_val + 1e-8) #HARDCODE
 
 	# print('expected_ex_post_penalty',expected_ex_post_penalty)
@@ -384,7 +384,7 @@ def update_detours(customers):
 if __name__=='__main__':
 
 
-	params['scenario'] = 'sssd'
+	params['scenario'] = 'ssd'
 
 	print('Run scenario: ',params['scenario'])
 
@@ -400,7 +400,7 @@ if __name__=='__main__':
 
 	#Initialize customer 2
 	customers[2] = {}	
-	customers[2]['s'] = np.array([1,.5])
+	customers[2]['s'] = np.array([1.5,2])
 	if params['scenario']=='ssd' or params['scenario']=='sssd':
 		customers[2]['d'] = customers[1]['d']
 	elif params['scenario']=='sdsd':
@@ -433,6 +433,13 @@ if __name__=='__main__':
 	# print(customers)
 	print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
 
+
+
+
+	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices_j['p_x'],prices_j['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j)
+
+	print('expost penalty sum: ',expost_penalty_sum)
+	print(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
 
 
 	if params['scenario']=='sssd':

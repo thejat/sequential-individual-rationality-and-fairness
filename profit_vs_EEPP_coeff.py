@@ -155,9 +155,11 @@ def opt_profits_given_multiplier(params):
 
 			if params['scenario'] == 'ssd':
 				temp_penalty = get_incremental_penalty([customers[1]['p_x'],customers[1]['p_s']],customers,1,params['degradation_multiplier'],params['support_v'])
-				data['foc_condition'][idxi,idxj] = (1/customers[2]['sd'])*((customers[1]['p_s']-params['c_op'])*(distance(customers[1]['s'],customers[2]['s']) + customers[2]['sd'] - customers[1]['sd']) -EEPP_coeff*temp_penalty)/(customers[2]['k_delta_bar']) + params['c_op']
+				data['foc_condition'][idxi,idxj] = ((1/customers[2]['sd'])*((customers[1]['p_s']-params['c_op'])*(distance(customers[1]['s'],customers[2]['s']) + customers[2]['sd'] - customers[1]['sd']) -EEPP_coeff*temp_penalty)/(customers[2]['k_delta_bar']) + params['c_op'])*(1 + customers[2]['delta_bar'])/(customers[2]['delta_bar']) - phi_v_inv(params['c_op'])
 
-				data['foc_condition_boundary_overlay_prob_pool'][idxi,idxj] = data['prob_pool'][idxi,idxj]*(1-indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle/2))
+				data['foc_condition_boundary'][idxi,idxj] = indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle/2)
+
+				data['foc_condition_boundary_overlay_prob_pool'][idxi,idxj] = (.1 + data['prob_pool'][idxi,idxj])*(1-indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle/2))
 
 
 
@@ -225,7 +227,7 @@ if __name__=='__main__':
 	params['start_time'] = time.time()
 	print('Run scenario: ',params['scenario'])
 
-	EEPP_coeff_array = [.5] #[0.25,.5,1,2]
+	EEPP_coeff_array = [.25] #[.5] #[0.25,.5,1,2]
 
 
 	if params['multiprocessing'] is True:
