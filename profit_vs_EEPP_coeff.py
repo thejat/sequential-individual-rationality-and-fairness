@@ -73,7 +73,7 @@ def opt_profits_given_multiplier(params):
 	for idx in [1]:
 		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
 		customers[idx]['delta_bar'] = params['delta_same']
-		customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'])
+		customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
 		customers[idx]['actual_detour_wo_j'] = 0
 		customers[idx]['is_bootstrapped'] = True
 
@@ -105,7 +105,7 @@ def opt_profits_given_multiplier(params):
 			for idx in [2]:
 				customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
 				customers[idx]['delta_bar'] = params['delta_same']
-				customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'])
+				customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
 				customers[idx]['actual_detour_wo_j'] = 0
 				customers[idx]['is_bootstrapped'] = False
 
@@ -154,7 +154,7 @@ def opt_profits_given_multiplier(params):
 			data['circle_s1d'][idxi,idxj] = indicator_of(abs(distance(np.array([i,j]),customers[1]['s']) -customers[1]['sd']) < threshold_circle)
 
 			if params['scenario'] == 'ssd':
-				temp_penalty = get_incremental_penalty([customers[1]['p_x'],customers[1]['p_s']],customers,1,params['degradation_multiplier'],params['support_v'])
+				temp_penalty = get_incremental_penalty([customers[1]['p_x'],customers[1]['p_s']],customers,1,params['degradation_multiplier'],params['support_v'],params['k_bar'])
 				data['foc_condition'][idxi,idxj] = ((1/customers[2]['sd'])*((customers[1]['p_s']-params['c_op'])*(distance(customers[1]['s'],customers[2]['s']) + customers[2]['sd'] - customers[1]['sd']) -EEPP_coeff*temp_penalty)/(customers[2]['k_delta_bar']) + params['c_op'])*(1 + customers[2]['delta_bar'])/(customers[2]['delta_bar']) - phi_v_inv(params['c_op'])
 
 				data['foc_condition_boundary'][idxi,idxj] = indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle/2)
