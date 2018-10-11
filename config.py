@@ -26,7 +26,7 @@ params['p_s_1'] = 0.35
 params['k_bar'] = 0.8
 #Constants for Optimization
 params['solver_type'] = 'gridsearch'
-params['gridsearch_resolution'] = .05
+params['gridsearch_resolution'] = .01
 
 
 
