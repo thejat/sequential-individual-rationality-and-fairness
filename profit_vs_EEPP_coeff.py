@@ -65,8 +65,8 @@ def opt_profits_given_multiplier(params):
 	#Customer 1 initialize
 	customers = OrderedDict()
 	customers[1] = {}
-	customers[1]['s'] = np.array([3,0])
-	customers[1]['d'] = np.array([-3,0])
+	customers[1]['s'] = np.array([0,0]) #np.array([3,0])
+	customers[1]['d'] = np.array([2.5,0]) #np.array([-3,0])
 	customers[1]['p_s'] = params['p_s_1']
 	customers[1]['p_x'] = params['support_v'][1]
 
@@ -113,7 +113,7 @@ def opt_profits_given_multiplier(params):
 			if customers[idx]['k_delta_bar'] < 0:
 				data['px'][idxi,idxj] = phi_v_inv(params['c_op']) #HARDCODED
 				data['ps'][idxi,idxj] = phi_v_inv(params['c_op'])
-				data['profitval'][idxi,idxj] = get_incremental_profit_adding_j([data['px'][idxi,idxj],data['ps'][idxi,idxj]],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j)
+				data['profitval'][idxi,idxj] = get_incremental_profit_adding_j([data['px'][idxi,idxj],data['ps'][idxi,idxj]],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j,params['k_bar'])
 			else:
 
 				[profit,prices,profit_surface] = maximize_incremental_profit_j(params,customers)
@@ -123,7 +123,7 @@ def opt_profits_given_multiplier(params):
 
 
 			t_j,temp_route = opt_customer_to_drop_after_j(customers)
-			(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices['p_x'],prices['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j)
+			(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices['p_x'],prices['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j,params['k_bar'])
 
 			data['expost_penalty'][idxi,idxj] = expost_penalty_sum
 			data['profitvals_choose_pool'][idxi,idxj] = incr_profit_pool_val

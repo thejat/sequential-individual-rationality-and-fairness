@@ -47,11 +47,11 @@ def distance(a,b):
 	dist = np.linalg.norm(a-b)
 	return dist
 
-def degradation(delta_i,degradation_multiplier):
+def degradation(delta_i,degradation_multiplier,k_bar):
 	'''
 	delta_i is essentially a variable and this function needs to be reevaluated everytime
 	'''
-	k_bar = .88
+	# k_bar = .88
 	degradation_coeff = k_bar - delta_i/degradation_multiplier
 	return degradation_coeff
 
@@ -237,15 +237,15 @@ def sum_previous_customer_shared_prices(customers,start_idx):
 			summed_p_s += customers[idx]['p_s']
 	return summed_p_s
 
-def get_incremental_profit_adding_j(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j):
+def get_incremental_profit_adding_j(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar):
 
 	# print('profit eval AA t_j',t_j)
 
-	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j)
+	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 
 	return prob_exclusive_val*incr_profit_exclusive_val + prob_pool_val*incr_profit_pool_val
 
-def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j):
+def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar):
 	'''
 	applicability: multi-source and multi-destination
 	'''
@@ -262,7 +262,7 @@ def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degrad
 
 	expost_penalty_sum = 0
 	for idx in customers:
-		expost_penalty_sum += get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v)
+		expost_penalty_sum += get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_bar)
 
 	# print('profit eval BB t_j',t_j)
 	incr_profit_pool_val = p_s*customers[customer_j]['sd']*(1 + customers[customer_j]['actual_detour_w_j']) \
@@ -274,7 +274,7 @@ def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degrad
 
 	return (prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
 
-def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v):
+def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_bar):
 
 	if idx == len(customers):
 		p_x = x[0]
@@ -286,8 +286,8 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v):
 	delta_ijm1 = customers[idx]['actual_detour_wo_j']
 	delta_ij = customers[idx]['actual_detour_w_j']
 
-	k_delta_ijm1 = degradation(delta_ijm1,degradation_multiplier)
-	k_delta_ij = degradation(delta_ij,degradation_multiplier)
+	k_delta_ijm1 = degradation(delta_ijm1,degradation_multiplier,k_bar)
+	k_delta_ij = degradation(delta_ij,degradation_multiplier,k_bar)
 
 	v_ubar_before_j = p_s*(1+delta_ijm1)/k_delta_ijm1
 	v_ubar_after_j = p_s*(1+delta_ij)/k_delta_ij
@@ -329,6 +329,7 @@ def maximize_incremental_profit_j(params,customers):
 	gridsearch_resolution = params['gridsearch_resolution']
 	support_v = params['support_v']
 	degradation_multiplier = params['degradation_multiplier']
+	k_bar = params['k_bar']
 
 	customer_j = len(customers)
 	delta_bar = customers[customer_j]['delta_bar']
@@ -346,7 +347,7 @@ def maximize_incremental_profit_j(params,customers):
 	# print('t_j',t_j)
 	customers = set_actual_detours_w_j(customers,t_j)
 
-	profit = get_incremental_profit_adding_j(initial_guess,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j)
+	profit = get_incremental_profit_adding_j(initial_guess,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 
 	profit_surface = None
 	p_x_opt = initial_guess[0]
@@ -364,7 +365,7 @@ def maximize_incremental_profit_j(params,customers):
 			for idxs,p_s_var in enumerate(ps_gridvals):
 				if pricing_feasibility_constraint([p_x_var,p_s_var],delta_bar,k_delta_bar) >= 0:
 
-					profit_var = get_incremental_profit_adding_j([p_x_var,p_s_var],customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j)
+					profit_var = get_incremental_profit_adding_j([p_x_var,p_s_var],customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 
 					profit_surface[idxx,idxs] = profit_var
 					if profit_var > profit:
@@ -411,7 +412,7 @@ if __name__=='__main__':
 	for idx in customers:
 		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
 		customers[idx]['delta_bar'] = params['delta_same']
-		customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'])
+		customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
 		customers[idx]['actual_detour_wo_j'] = 0
 		if idx !=1:
 			customers[idx]['is_bootstrapped'] = False
@@ -436,7 +437,7 @@ if __name__=='__main__':
 
 
 
-	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices_j['p_x'],prices_j['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j)
+	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices_j['p_x'],prices_j['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j,params['k_bar'])
 
 	print('expost penalty sum: ',expost_penalty_sum)
 	print('prbx,probp,incrpex,incpp,expp',prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
@@ -460,7 +461,7 @@ if __name__=='__main__':
 		for idx in [3]:
 			customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
 			customers[idx]['delta_bar'] = params['delta_same']
-			customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'])
+			customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
 			customers[idx]['actual_detour_wo_j'] = 0
 			if idx !=1:
 				customers[idx]['is_bootstrapped'] = False
