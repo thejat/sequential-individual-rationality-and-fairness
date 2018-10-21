@@ -27,10 +27,10 @@ params['k_bar'] = 0.8
 
 #Constants for Experiment
 #####Customer 2's location grid
-params['x_min'] = -50
-params['x_max'] = 80
-params['y_min'] = -70
-params['y_max'] = 70 #40
+params['x_min'] = -40
+params['x_max'] =  60
+params['y_min'] = -40 #-70
+params['y_max'] =  40 # 70
 params['xvals'] = np.array(list(range(params['x_min'],params['x_max'],1)))/10
 params['yvals'] = np.array(list(range(params['y_min'],params['y_max'],1)))/10
 
@@ -41,7 +41,7 @@ params['p_x_max_per_mile'] = params['support_v'][1]
 
 #####for profit vs EEPP_coeff
 params['multiprocessing'] = False
-params['scenario'] = 'ssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'sdsd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 params['nprocesses'] = 8
 params['all_data_keys'] = [
 	'profitval',
@@ -55,13 +55,13 @@ params['all_data_keys'] = [
 	'prob_pool',
 	'prob_exclusive',
 	'prob_nothing',
+	't_j',
+	'circle_s1d',
 	'profitval_and_prob_pool',
 	'circle_delta_1_bar',
 	'circle_delta_2_bar',
-	'circle_s1d',
 	'circle_test1',
 	'circle_test3',
-	't_j',
 	'profitval_and_prob_pool_and_delta1bar',
 	'circle_delta_bars_intersection',
 	'circle_delta_1_bar_region',
@@ -82,13 +82,13 @@ params['plot_keys'] = [
 	'prob_pool',
 	'prob_exclusive',
 	'prob_nothing',
+	't_j',
+	# 'circle_s1d',
 	'profitval_and_prob_pool',
 	'circle_delta_1_bar',
 	'circle_delta_2_bar',
-	# 'circle_s1d',
 	# 'circle_test1',
 	# 'circle_test3',
-	't_j',
 	'profitval_and_prob_pool_and_delta1bar',
 	'circle_delta_bars_intersection',
 	'circle_delta_1_bar_region',

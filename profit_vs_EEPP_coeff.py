@@ -82,7 +82,7 @@ def opt_profits_given_multiplier(params):
 
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
-	customers[2]['s'] = np.array([customers[1]['d'][0]/2,3])
+	customers[2]['s'] = np.array([customers[1]['d'][0]/2,1])
 	customers[2]['d'] = customers[1]['d']
 	customers[2]['delta_bar'] = params['delta_same']
 	customers[2]['k_delta_bar'] = degradation(customers[2]['delta_bar'],params['degradation_multiplier'],	params['k_bar'])
@@ -104,57 +104,56 @@ def opt_profits_given_multiplier(params):
 				break
 
 			customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
-
-			if customers[idx]['k_delta_bar'] < 0:
-				data['px'][idxi,idxj] = phi_v_inv(params['c_op']) #HARDCODED
-				data['ps'][idxi,idxj] = phi_v_inv(params['c_op'])
-				data['profitval'][idxi,idxj] = get_incremental_profit_adding_j([data['px'][idxi,idxj],data['ps'][idxi,idxj]],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j,params['k_bar'])
-			else:
-
-				[profit,prices,profit_surface] = maximize_incremental_profit_j(params,customers)
-				data['profitval'][idxi,idxj] = profit
-				data['ps'][idxi,idxj] = prices.get('p_s')
-				data['px'][idxi,idxj] = prices.get('p_x')
-
-
 			t_j,temp_route = opt_customer_to_drop_after_j(customers)
+			[profit,prices,profit_surface] = maximize_incremental_profit_j(params,customers)
 			(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices['p_x'],prices['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j,params['k_bar'])
 
+
+			data['profitval'][idxi,idxj] = profit
 			data['expost_penalty'][idxi,idxj] = expost_penalty_sum
-			data['profitvals_choose_pool'][idxi,idxj] = incr_profit_pool_val
-			data['profitvals_choose_exclu'][idxi,idxj] = incr_profit_exclusive_val
-			data['profitvals_choose_exclu_vs_pool'][idxi,idxj] = incr_profit_exclusive_val - incr_profit_pool_val
-			data['profitvals_choose_exclu_vs_pool_sign'][idxi,idxj] = np.sign(incr_profit_exclusive_val - incr_profit_pool_val)           
+			data['ps'][idxi,idxj] = prices.get('p_s')
+			data['px'][idxi,idxj] = prices.get('p_x')
+			# data['profitvals_choose_pool'][idxi,idxj] = incr_profit_pool_val
+			# data['profitvals_choose_exclu'][idxi,idxj] = incr_profit_exclusive_val
+			# data['profitvals_choose_exclu_vs_pool'][idxi,idxj] = incr_profit_exclusive_val - incr_profit_pool_val
+			# data['profitvals_choose_exclu_vs_pool_sign'][idxi,idxj] = np.sign(incr_profit_exclusive_val - incr_profit_pool_val)           
 			data['prob_pool'][idxi,idxj] = prob_pool_val
 			data['prob_exclusive'][idxi,idxj] = prob_exclusive_val
 			data['prob_nothing'][idxi,idxj] = 1 - prob_pool_val - prob_exclusive_val
 			data['t_j'][idxi,idxj] = t_j
 
-			threshold_circle = 1e-1
-			if t_j ==2:
-				data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(source_detour_for_j(customers) - customers[1]['delta_bar']*customers[1]['sd']) < threshold_circle) #HARDCODE
-
-				data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(distance(customers[2]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd']) < threshold_circle) #HARDCODE
-
-				data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(source_detour_for_j(customers) - customers[1]['delta_bar']*customers[1]['sd'] < 0) #HARDCODE
-
-				data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(distance(customers[2]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd'] < 0) #HARDCODE
-			else:
-				data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j) - customers[1]['delta_bar']*customers[1]['sd']) < threshold_circle)
-				data['circle_delta_2_bar'][idxi,idxj] = 0
-			
-				data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j) - customers[1]['delta_bar']*customers[1]['sd'] < 0)
-				data['circle_delta_2_bar_region'][idxi,idxj] = 1
-
+			threshold_circle = 5e-2
 			data['circle_s1d'][idxi,idxj] = indicator_of(abs(distance(np.array([i,j]),customers[1]['s']) -customers[1]['sd']) < threshold_circle)
 
+
+			if params['scenario'] == 'sdsd' and t_j ==2:
+				temp_circle_val = source_detour_for_j(customers) - customers[1]['delta_bar']*customers[1]['sd']
+
+				data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
+				data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
+
+
+				temp_circle_val = distance(customers[2]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd']
+
+				data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
+				data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
+			else:
+				temp_circle_val = source_detour_for_j(customers) + destination_detour_for_j(customers,t_j) - customers[1]['delta_bar']*customers[1]['sd']
+
+				data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
+				data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
+
+				data['circle_delta_2_bar'][idxi,idxj] = 0			
+				data['circle_delta_2_bar_region'][idxi,idxj] = 1
+
+			
 			if params['scenario'] == 'ssd':
 				temp_penalty = get_incremental_penalty([customers[1]['p_x'],customers[1]['p_s']],customers,1,params['degradation_multiplier'],params['support_v'],params['k_bar'])
-				data['foc_condition'][idxi,idxj] = ((1/customers[2]['sd'])*((customers[1]['p_s']-params['c_op'])*(distance(customers[1]['s'],customers[2]['s']) + customers[2]['sd'] - customers[1]['sd']) -EEPP_coeff*temp_penalty)/(customers[2]['k_delta_bar']) + params['c_op'])*(1 + customers[2]['delta_bar'])/(customers[2]['delta_bar']) - phi_v_inv(params['c_op'])
 
-				data['foc_condition_boundary'][idxi,idxj] = indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle/2)
+				data['foc_condition'][idxi,idxj] = params['c_op']*(customers[2]['sd']*customers[2]['k_delta_bar'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*temp_penalty
 
-				data['foc_condition_boundary_overlay_prob_pool'][idxi,idxj] = (.1 + data['prob_pool'][idxi,idxj])*(1-indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle/2))
+				data['foc_condition_boundary'][idxi,idxj] = indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle)
+				data['foc_condition_boundary_overlay_prob_pool'][idxi,idxj] = (.1 + data['prob_pool'][idxi,idxj])*(1-data['foc_condition_boundary'][idxi,idxj])
 
 
 
