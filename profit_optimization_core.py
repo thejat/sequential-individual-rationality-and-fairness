@@ -12,12 +12,19 @@ import scipy.integrate as integrate
 from collections import OrderedDict
 from config import *
 
-def phi_v_inv(y):
+def phi_v_inv(y,support_v):
 	'''
 	Inverse function of virtual valuation for the uniform distribution. 
 	See https://en.wikipedia.org/wiki/Regular_distribution_(economics)
 	'''
-	return 0.5*(1+y)
+	if y > support_v[1] or y < 2*support_v[0] - support_v[1]:
+		return None
+	return 0.5*(support_v[1]+y)
+
+def phi(v,support_v):
+	if v is None or f_v(v,support_v) <= 0:
+		return -np.inf
+	return v - (1-F_v(v,support_v))/f_v(v,support_v)
 
 def f_v(v,support_v):
 	'''
@@ -306,6 +313,7 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_b
 def maximize_incremental_profit_j(params,customers):
 
 	customer_j = len(customers)
+	active_customer_idxes = active_customers_j(customers)
 	k_delta_bar = customers[customer_j]['k_delta_bar']
 
 	solver_type = params['solver_type']
@@ -341,6 +349,8 @@ def maximize_incremental_profit_j(params,customers):
 		# print('\nUsing Gridsearch:')
 		px_gridvals = np.linspace(px_lb,px_ub,num=gridsearch_num)
 		ps_gridvals = np.linspace(ps_lb,ps_ub,num=gridsearch_num)
+		print('px_gridvals',px_gridvals/customers[customer_j]['sd'])
+		print('ps_gridvals',ps_gridvals/customers[customer_j]['sd'])
 		profit_surface = np.zeros((gridsearch_num,gridsearch_num))
 
 		for idxx,p_x_var in enumerate(px_gridvals):
@@ -354,6 +364,48 @@ def maximize_incremental_profit_j(params,customers):
 						profit = profit_var
 						p_x_opt = p_x_var
 						p_s_opt = p_s_var
+	elif solver_type == 'closed_form':
+
+		#Solve for v_ubar_opt
+		expost_penalty_sum = 0
+		for idx in active_customer_idxes:
+			expost_penalty_sum += get_incremental_penalty([None,None],customers,idx,degradation_multiplier,support_v,k_bar)
+
+		temp_val_nr = c_op*(customers[customer_j]['sd'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
+		temp_val_dr = (1 - k_delta_bar)*customers[customer_j]['sd']
+		
+		temp_threshold = temp_val_nr/temp_val_dr
+
+		if temp_threshold >= support_v[1]:
+			v_ubar_opt = support_v[1]
+			print('v_ubar_opt clipped to ', v_ubar_opt)
+		elif temp_threshold <= 2*support_v[0] - support_v[1]:
+			v_ubar_opt = support_v[0]
+			print('v_ubar_opt clipped to ', v_ubar_opt)
+		else:
+			# print('temp_threshold',temp_threshold)
+			v_ubar_opt = phi_v_inv(temp_threshold,support_v)
+
+		# print('v_ubar_opt',v_ubar_opt)
+
+		# RHS of solution validity
+
+		temp_val_nr = c_op*(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j)) + EEPP_coeff*expost_penalty_sum
+		temp_val_dr = k_delta_bar*customers[customer_j]['sd']
+
+		temp_threshold = temp_val_nr/temp_val_dr
+
+
+		if phi(v_ubar_opt,support_v) <= temp_threshold:
+			#solution at boundary or exterior, no shared ride
+			p_x_opt = v_ubar_opt*customers[customer_j]['sd']
+			p_s_opt = k_delta_bar*p_x_opt
+		else:
+			v_lbar_opt = phi_v_inv(temp_threshold,support_v)
+			p_s_opt = v_lbar_opt*k_delta_bar*customers[customer_j]['sd']
+			p_x_opt = p_s_opt + v_ubar_opt*(1 - k_delta_bar)*customers[customer_j]['sd']
+
+		profit = get_incremental_profit_adding_j([p_x_opt,p_s_opt],customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 	else:
 		print('NO SOLVER!')
 

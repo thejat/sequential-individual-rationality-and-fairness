@@ -200,7 +200,9 @@ if __name__=='__main__':
 	params['start_time'] = time.time()
 	print('Run scenario: ',params['scenario'])
 
-	EEPP_coeff_array = [params['EEPP_coeff']] #[.5] #[0.25,.5,1,2]
+	# EEPP_coeff_array = [params['EEPP_coeff']] 
+	# EEPP_coeff_array = [0.1,1,10,50,100,1000]
+	EEPP_coeff_array = [1]
 
 	print('EEPP_coeff_array is',EEPP_coeff_array)
 
