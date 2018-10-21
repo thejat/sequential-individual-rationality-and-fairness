@@ -70,23 +70,35 @@ params['all_data_keys'] = [
 	'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool']
 
-params['plot_keys00'] = [
+params['plot_keys'] = [
 	'profitval',
 	'expost_penalty',
+	'ps',
+	'px',
+	# 'profitvals_choose_pool',
+	# 'profitvals_choose_exclu',
+	# 'profitvals_choose_exclu_vs_pool',
+	# 'profitvals_choose_exclu_vs_pool_sign',
+	'prob_pool',
+	'prob_exclusive',
+	'prob_nothing',
 	'profitval_and_prob_pool',
-	'profitval_and_prob_pool_and_delta1bar',
-	't_j',
 	'circle_delta_1_bar',
 	'circle_delta_2_bar',
+	# 'circle_s1d',
+	# 'circle_test1',
+	# 'circle_test3',
+	't_j',
+	'profitval_and_prob_pool_and_delta1bar',
 	'circle_delta_bars_intersection',
 	'circle_delta_1_bar_region',
 	'circle_delta_2_bar_region',
 	'foc_condition',
 	'foc_condition_boundary',
-	'foc_condition_boundary_overlay_prob_pool'	
-	]
-params['plot_keys01'] = [
+	'foc_condition_boundary_overlay_prob_pool']
+
+
+params['plot_probabilities'] = [
 	'prob_pool',
 	'prob_exclusive',
 	'prob_nothing']
-params['plot_keys02'] = ['ps','px']

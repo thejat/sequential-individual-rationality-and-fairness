@@ -70,13 +70,10 @@ def opt_profits_given_multiplier(params):
 	customers[1]['sd']  = distance(customers[1]['s'],customers[1]['d'])
 	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
 	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
-
-	for idx in [1]:
-		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
-		customers[idx]['delta_bar'] = params['delta_same']
-		customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
-		customers[idx]['actual_detour_wo_j'] = 0
-		customers[idx]['is_bootstrapped'] = True
+	customers[1]['delta_bar'] = params['delta_same']
+	customers[1]['k_delta_bar'] = degradation(customers[1]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+	customers[1]['actual_detour_wo_j'] = 0
+	customers[1]['is_bootstrapped'] = True
 
 	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'],customers[1]['sd'])
 	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_s'],customers[1]['delta_bar'],customers[1]['k_delta_bar'],customers[1]['sd'])
@@ -87,6 +84,10 @@ def opt_profits_given_multiplier(params):
 	customers[2] = {}
 	customers[2]['s'] = np.array([customers[1]['d'][0]/2,3])
 	customers[2]['d'] = customers[1]['d']
+	customers[2]['delta_bar'] = params['delta_same']
+	customers[2]['k_delta_bar'] = degradation(customers[2]['delta_bar'],params['degradation_multiplier'],	params['k_bar'])
+	customers[2]['actual_detour_wo_j'] = 0
+	customers[2]['is_bootstrapped'] = False
 
 	for idxi,i in enumerate(params['xvals']):
 		
@@ -96,20 +97,13 @@ def opt_profits_given_multiplier(params):
 			
 			if params['scenario']=='ssd':
 				customers[2]['s'] = np.array([i,j])
-				customers[2]['d'] = customers[1]['d']
 			elif params['scenario']=='sdsd':
 				customers[2]['d'] = np.array([i,j])
 			else:
 				print('ERROR: scenario is incorrectly specified.')
 				break
 
-			for idx in [2]:
-				customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
-				customers[idx]['delta_bar'] = params['delta_same']
-				customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
-				customers[idx]['actual_detour_wo_j'] = 0
-				customers[idx]['is_bootstrapped'] = False
-
+			customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
 
 			if customers[idx]['k_delta_bar'] < 0:
 				data['px'][idxi,idxj] = phi_v_inv(params['c_op']) #HARDCODED
@@ -184,44 +178,23 @@ def plot_data(data_params_customers,EEPP_coeff):
 	s2x,s2y = idx_of_point(params['xvals'],params['yvals'],customers[2]['s'])
 	# d2x,d2y = idx_of_point(params['xvals'],params['yvals'],customers[2]['d'])
 
-	for key in params['plot_keys00']:
+	for key in params['plot_keys']:
 		temp = pd.DataFrame(data=data[key],index=params['xvals'],columns=params['yvals'])
-		ax = sns.heatmap(temp, cmap="YlGnBu")
+		if key in params['plot_probabilities']:
+			assert np.max(data[key]) <= 1
+			assert np.min(data[key]) >= 0
+			ax = sns.heatmap(temp, cmap="YlGnBu",vmin=0, vmax=1)
+		else:
+			ax = sns.heatmap(temp, cmap="YlGnBu")
+	
 		ax.scatter(s1y,s1x, marker='*', s=100, color='red') 
-		ax.scatter(d1y,d1x, marker='*', s=100, color='red') 
-		ax.scatter(s2y,s2x, marker='*', s=100, color='red') 
-		# ax.scatter(d2y,d2x, marker='*', s=100, color='black') 
+		ax.scatter(d1y,d1x, marker='*', s=100, color='red')
+		if params['scenario']=='sdsd':
+			ax.scatter(s2y,s2x, marker='*', s=100, color='red') 
+		# ax.scatter(d2y,d2x, marker='*', s=100, color='red') 
 		fig = ax.get_figure()
 		fig.savefig('./output/'+key+'_multiplier'+str(EEPP_coeff)+'.png', bbox_inches='tight', pad_inches=0)
 		fig.clf()
-
-	for key in params['plot_keys01']:
-		assert np.max(data[key]) <= 1
-		assert np.min(data[key]) >= 0
-		temp = pd.DataFrame(data=data[key],index=params['xvals'],columns=params['yvals'])
-		ax = sns.heatmap(temp, cmap="YlGnBu",vmin=0, vmax=1)
-		ax.scatter(s1y,s1x, marker='*', s=100, color='red') 
-		ax.scatter(d1y,d1x, marker='*', s=100, color='red') 
-		ax.scatter(s2y,s2x, marker='*', s=100, color='red') 
-		fig = ax.get_figure()
-		fig.savefig('./output/'+key+'_multiplier'+str(EEPP_coeff)+'.png', bbox_inches='tight', pad_inches=0)
-		fig.clf()
-
-	for key in params['plot_keys02']:
-		assert np.min(data[key]) >= 0
-		temp = pd.DataFrame(data=data[key],index=params['xvals'],columns=params['yvals'])
-		if key=='ps':
-			temp_vmax = params['p_x_max']
-		elif key=='px':
-			temp_vmax = params['p_x_max']
-		ax = sns.heatmap(temp, cmap="YlGnBu",vmin=0, vmax=temp_vmax)
-		ax.scatter(s1y,s1x, marker='*', s=100, color='red') 
-		ax.scatter(d1y,d1x, marker='*', s=100, color='red') 
-		ax.scatter(s2y,s2x, marker='*', s=100, color='red') 
-		fig = ax.get_figure()
-		fig.savefig('./output/'+key+'_multiplier'+str(EEPP_coeff)+'.png', bbox_inches='tight', pad_inches=0)
-		fig.clf()
-
 
 
 if __name__=='__main__':

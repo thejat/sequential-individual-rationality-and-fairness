@@ -317,7 +317,7 @@ def maximize_incremental_profit_j(params,customers):
 	degradation_multiplier = params['degradation_multiplier']
 	k_bar = params['k_bar']
 
-	print('p_x_max',p_x_max)
+	# print('p_x_max',p_x_max)
 
 	px_lb = c_op*customers[customer_j]['sd']
 	px_ub = p_x_max
