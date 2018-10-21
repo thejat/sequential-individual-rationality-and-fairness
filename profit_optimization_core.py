@@ -55,15 +55,15 @@ def degradation(delta_i,degradation_multiplier,k_bar):
 	degradation_coeff = k_bar - delta_i/degradation_multiplier
 	return degradation_coeff
 
-def assert_p_s_1_greater_than_c_op(p_s_1,c_op):
+def assert_p_s_1_greater_than_c_op(p_s_1,c_op,s1d1):
 	'''
 	assuming they are bootstrapped. otherwise we don't need shared price to be greater than c_op
 	'''
-	assert p_s_1 >= c_op
+	assert p_s_1 >= c_op*s1d1
 
 def assert_ex_ante_customer1_IR(support_v,p_s_1,delta_bar,k_delta_bar,s1d1):
 	#customer 1's ex ante IR constraint
-	ir_1_ante = s1d1*k_delta_bar*support_v[1] - s1d1*p_s_1*(1+delta_bar)
+	ir_1_ante = s1d1*k_delta_bar*support_v[1] - p_s_1
 	print('Ex ante customer 1 IR should be nonneg for support_v[1]:',ir_1_ante)
 	assert ir_1_ante > 0
 
@@ -73,27 +73,27 @@ def active_customers_j(customers):
 	'''
 	return sorted(customers.keys())[:-1]
 
-def pricing_feasibility_constraint(x,delta_bar,k_delta_bar):
+def pricing_feasibility_constraint(x,k_delta_bar):
 	'''
 	we need the computed value to be positive for the customer to even consider sharing. when its zero, p_s does not matter, so covers the exclusive vs declined case.
 	'''
 	p_x_var,p_s_var = x[0],x[1]
-	return (k_delta_bar/(1 + delta_bar))*p_x_var - p_s_var
+	return k_delta_bar*p_x_var - p_s_var
 
-def prob_exclusive_j(p_x,p_s,delta_bar,support_v,k_delta_bar):
+def prob_exclusive_j(p_x,p_s,sidi,support_v,k_delta_bar):
 	'''
 	applicability: multi-source and multi-destination
 	'''
-	v_ubar = (p_x - p_s*(1+delta_bar))/(1-k_delta_bar)
+	v_ubar = (p_x - p_s)/((1-k_delta_bar)*sidi)
 	prob_exclusive_val = 1 - F_v(v_ubar,support_v)
 	return prob_exclusive_val
 
-def prob_pool_j(p_x,p_s,delta_bar,support_v,k_delta_bar,flag_print_arguments=False):
+def prob_pool_j(p_x,p_s,sidi,support_v,k_delta_bar,flag_print_arguments=False):
 	'''
 	applicability: multi-source and multi-destination
 	'''
-	v_ubar = (p_x - p_s*(1+delta_bar))/(1-k_delta_bar)
-	v_lbar = p_s*(1+delta_bar)/(k_delta_bar)
+	v_ubar = (p_x - p_s)/((1-k_delta_bar)*sidi)
+	v_lbar = p_s/(k_delta_bar*sidi)
 	if v_ubar-v_lbar < -1e-4: #HARDCODED	
 		print('WARNING: Prob(Shared) computation issue. Returning 0')
 		if flag_print_arguments is True:
@@ -111,6 +111,11 @@ def last_customer_picked_up_or_dropped_off(active_customer_idxes):
 	return active_customer_idxes[-1]
 
 def source_detour_for_j(customers):
+	'''
+	t_j_minus is 0
+	t_j_minus + 1 is customer 1
+	D_0 is given by location_from_which_detour_starts
+	'''
 
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
@@ -123,12 +128,6 @@ def source_detour_for_j(customers):
 
 	source_detour_val = distance(location_from_which_detour_starts,customers[customer_j]['s']) + distance(customers[customer_j]['s'],location_next_customer_drop) - distance(location_from_which_detour_starts,location_next_customer_drop)
 	return source_detour_val
-
-def set_actual_detours_wo_j(customers):
-	'''
-	these fields in the customers dict need to be updated for another pickup
-	'''
-	raise NotImplementedError
 
 def destination_detour_for_j(customers,t_j):
 	'''
@@ -144,15 +143,10 @@ def destination_detour_for_j(customers,t_j):
 							+ distance(customers[customer_j]['d'],location_next_customer_drop) \
 							- distance(customers[customer_j]['s'],location_next_customer_drop)
 
-	elif t_j > 1 and t_j < active_customer_idxes[-1]:
+	elif t_j > 1 and t_j < customer_j:
 		destination_detour_val = distance(customers[t_j-1]['d'],customers[customer_j]['d']) \
 								+ distance(customers[customer_j]['d'],customers[t_j]['d']) \
-								- distance(customers[t_j]['d'],customers[t_j+1]['d'])
-
-	elif t_j == active_customer_idxes[-1]:
-		destination_detour_val = distance(customers[t_j-1]['d'],customers[customer_j]['d']) \
-								+ distance(customers[customer_j]['d'],customers[t_j]['d']) \
-								- distance(customers[t_j]['d'],customers[customer_j]['d'])
+								- distance(customers[t_j]['d'],customers[t_j-1]['d'])
 	else:
 		destination_detour_val = distance(customers[active_customer_idxes[-1]]['d'],customers[customer_j]['d'])
 
@@ -163,14 +157,16 @@ def set_actual_detours_w_j(customers,t_j):
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
 
+	t_j_minus = 0 #TBD HARDCODED
+
 	for idx in active_customer_idxes:
 		# print('source detour',source_detour_for_j(customers))
 		# print('dest detour',destination_detour_for_j(customers,t_j))
-		customers[idx]['actual_detour_w_j'] = customers[idx]['actual_detour_wo_j'] + (source_detour_for_j(customers) + indicator_of(idx >= t_j)*destination_detour_for_j(customers,t_j))/customers[idx]['sd']
+		customers[idx]['actual_detour_w_j'] = customers[idx]['actual_detour_wo_j'] + (indicator_of(idx > t_j_minus)*source_detour_for_j(customers) + indicator_of(idx >= t_j)*destination_detour_for_j(customers,t_j))/customers[idx]['sd']
 
 	
 	#new customer
-	if t_j == customer_j or t_j==1:
+	if t_j==1:
 		customers[customer_j]['actual_detour_w_j'] = 0
 	else:
 		delta_j_j = distance(customers[customer_j]['s'],customers[1]['d'])
@@ -187,7 +183,7 @@ def set_actual_detours_w_j(customers,t_j):
 def opt_customer_to_drop_after_j(customers):
 
 	'''
-	notation t_j used in the paper
+	notation t_j_plus used in the paper
 	this is the customer to be dropped off right after j
 	is a linear search operation as shown below
 	WARNING: we are not checking if the previous dropoff sequence is good.
@@ -226,16 +222,7 @@ def opt_customer_to_drop_after_j(customers):
 			t_j = idx + 1
 
 	# print('returned t_j',t_j)
-	return t_j,t_j #TODO: return the new route data structure
-
-def sum_previous_customer_shared_prices(customers,start_idx):
-	summed_p_s = 0
-	active_customer_idxes = active_customers_j(customers)
-	for idx in active_customer_idxes:
-		# print('sum call: idx',idx,'start_idx',start_idx)
-		if idx >= start_idx:
-			summed_p_s += customers[idx]['p_s']
-	return summed_p_s
+	return t_j,None #TODO: return the new route data structure
 
 def get_incremental_profit_adding_j(x,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar):
 
@@ -252,25 +239,21 @@ def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degrad
 
 	p_x,p_s = x[0],x[1]
 	customer_j = len(customers)
+	active_customer_idxes = active_customers_j(customers)
 
-	prob_exclusive_val = prob_exclusive_j(p_x,p_s,customers[customer_j]['delta_bar'],support_v,customers[customer_j]['k_delta_bar'])
+	prob_exclusive_val = prob_exclusive_j(p_x,p_s,customers[customer_j]['sd'],support_v,customers[customer_j]['k_delta_bar'])
 
-	prob_pool_val,tempa,tempb = prob_pool_j(p_x,p_s,customers[customer_j]['delta_bar'],support_v,customers[customer_j]['k_delta_bar'])
+	prob_pool_val,tempa,tempb = prob_pool_j(p_x,p_s,customers[customer_j]['sd'],support_v,customers[customer_j]['k_delta_bar'])
 
-	incr_profit_exclusive_val = (p_x - c_op)*customers[customer_j]['sd']
-
+	incr_profit_exclusive_val = p_x - c_op*customers[customer_j]['sd']
 
 	expost_penalty_sum = 0
-	for idx in customers:
+	for idx in active_customer_idxes:
 		expost_penalty_sum += get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_bar)
 
-	# print('profit eval BB t_j',t_j)
-	incr_profit_pool_val = p_s*customers[customer_j]['sd']*(1 + customers[customer_j]['actual_detour_w_j']) \
-		+ (sum_previous_customer_shared_prices(customers,1)-c_op)*source_detour_for_j(customers) \
-		+ (sum_previous_customer_shared_prices(customers,t_j)-c_op)*destination_detour_for_j(customers,t_j) \
+	incr_profit_pool_val = p_s \
+		- c_op*(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j)) \
 		- EEPP_coeff*expost_penalty_sum
-
-
 
 	return (prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
 
@@ -289,10 +272,10 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_b
 	k_delta_ijm1 = degradation(delta_ijm1,degradation_multiplier,k_bar)
 	k_delta_ij = degradation(delta_ij,degradation_multiplier,k_bar)
 
-	v_ubar_before_j = p_s*(1+delta_ijm1)/k_delta_ijm1
-	v_ubar_after_j = p_s*(1+delta_ij)/k_delta_ij
+	v_ubar_before_j = p_s/(k_delta_ijm1*customers[idx]['sd'])
+	v_ubar_after_j = p_s/(k_delta_ij*customers[idx]['sd'])
 
-	prob_pool_val,v_ubar,v_lbar =  prob_pool_j(p_x,p_s,customers[idx]['delta_bar'],support_v,customers[idx]['k_delta_bar'])
+	prob_pool_val,v_ubar,v_lbar =  prob_pool_j(p_x,p_s,customers[idx]['sd'],support_v,customers[idx]['k_delta_bar'])
 
 	if customers[idx]['is_bootstrapped'] is True:
 		'''
@@ -303,14 +286,14 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_b
 
 	term1ub = min(min(v_ubar_before_j,v_ubar),support_v[1])
 	term1lb = max(min(v_ubar_before_j,v_lbar),support_v[0])
-	term1nr = integrate.quad(lambda vvar: customers[idx]['sd']*f_v(vvar,support_v)*(k_delta_ijm1*vvar - p_s*(1 + delta_ijm1)),
+	term1nr = integrate.quad(lambda vvar: f_v(vvar,support_v)*(k_delta_ijm1*vvar*customers[idx]['sd'] - p_s),
 			term1lb,
 			term1ub)
 
 
 	term2ub = min(min(v_ubar_after_j,v_ubar),support_v[1])
 	term2lb = max(min(v_ubar_after_j,v_lbar),support_v[0])
-	term2nr = integrate.quad(lambda vvar: customers[idx]['sd']*f_v(vvar,support_v)*(k_delta_ij*vvar - p_s*(1 + delta_ij)),
+	term2nr = integrate.quad(lambda vvar: f_v(vvar,support_v)*(k_delta_ij*vvar*customers[idx]['sd'] - p_s),
 			term2lb,
 			term2ub)
 
@@ -322,24 +305,25 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_b
 
 def maximize_incremental_profit_j(params,customers):
 
+	customer_j = len(customers)
+	k_delta_bar = customers[customer_j]['k_delta_bar']
+
 	solver_type = params['solver_type']
 	c_op =	params['c_op']
-	p_x_max =	params['p_x_max']
+	p_x_max =	params['p_x_max_per_mile']*customers[customer_j]['sd']
 	EEPP_coeff = params['EEPP_coeff']
-	gridsearch_resolution = params['gridsearch_resolution']
+	gridsearch_num = params['gridsearch_num']
 	support_v = params['support_v']
 	degradation_multiplier = params['degradation_multiplier']
 	k_bar = params['k_bar']
 
-	customer_j = len(customers)
-	delta_bar = customers[customer_j]['delta_bar']
-	k_delta_bar = customers[customer_j]['k_delta_bar']
+	print('p_x_max',p_x_max)
 
-	px_lb = c_op
+	px_lb = c_op*customers[customer_j]['sd']
 	px_ub = p_x_max
 	ps_lb = 0
-	ps_ub = k_delta_bar*px_ub/(1 + delta_bar)
-	initial_guess = [min(px_ub,max(px_lb,phi_v_inv(c_op))),min(ps_ub,max(ps_lb,k_delta_bar*phi_v_inv(c_op)/(1+delta_bar)))]
+	ps_ub = k_delta_bar*px_ub
+	initial_guess = [px_ub,ps_ub]
 	assert px_lb <= initial_guess[0] <= px_ub
 	assert ps_lb <= initial_guess[1] <= ps_ub
 
@@ -355,15 +339,13 @@ def maximize_incremental_profit_j(params,customers):
 
 	if solver_type == 'gridsearch':
 		# print('\nUsing Gridsearch:')
-		px_gridsearch_num = int((px_ub-px_lb)/gridsearch_resolution)
-		ps_gridsearch_num = int((ps_ub - ps_lb)/gridsearch_resolution)
-		px_gridvals = np.linspace(px_lb,px_ub,num=px_gridsearch_num)
-		ps_gridvals = np.linspace(ps_lb,ps_ub,num=ps_gridsearch_num)
-		profit_surface = np.zeros((px_gridsearch_num,ps_gridsearch_num))
+		px_gridvals = np.linspace(px_lb,px_ub,num=gridsearch_num)
+		ps_gridvals = np.linspace(ps_lb,ps_ub,num=gridsearch_num)
+		profit_surface = np.zeros((gridsearch_num,gridsearch_num))
 
 		for idxx,p_x_var in enumerate(px_gridvals):
 			for idxs,p_s_var in enumerate(ps_gridvals):
-				if pricing_feasibility_constraint([p_x_var,p_s_var],delta_bar,k_delta_bar) >= 0:
+				if pricing_feasibility_constraint([p_x_var,p_s_var],k_delta_bar) >= 0:
 
 					profit_var = get_incremental_profit_adding_j([p_x_var,p_s_var],customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 
@@ -378,6 +360,7 @@ def maximize_incremental_profit_j(params,customers):
 	return (profit,{'p_x':p_x_opt,'p_s':p_s_opt},profit_surface)
 
 def update_detours(customers):
+	print('ERROR: NOT IMPLEMENTED FOR SSSD etc')
 	return customers
 
 #=========================================
@@ -394,10 +377,11 @@ if __name__=='__main__':
 	customers[1] = {}
 	customers[1]['s'] = np.array([3,0])
 	customers[1]['d'] = np.array([-3,0])
-	customers[1]['p_s'] = params['p_s_1']
-	customers[1]['p_x'] = params['support_v'][1]
+	customers[1]['sd']  = distance(customers[1]['s'],customers[1]['d'])
+	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
+	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
 	customers[1]['is_bootstrapped'] = True
-	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'])
+	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'],customers[1]['sd'])
 
 	#Initialize customer 2
 	customers[2] = {}	

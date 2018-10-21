@@ -19,18 +19,10 @@ params = {}
 params['c_op'] 	=  .3#0.32  #operational cost per unit time
 params['delta_same'] =  .3#0.54  #fixed promise by the firm
 params['support_v'] = (0,1)
-params['p_x_max'] = params['support_v'][1]	#maximum price that the firm charges
 params['degradation_multiplier'] = 3
 params['EEPP_coeff'] = .25 #3
-params['p_s_1'] = 0.35
+params['p_s_1_per_mile'] = 0.35
 params['k_bar'] = 0.8
-#Constants for Optimization
-params['solver_type'] = 'gridsearch'
-params['gridsearch_resolution'] = .05
-
-
-
-
 
 
 #Constants for Experiment
@@ -41,6 +33,12 @@ params['y_min'] = -70
 params['y_max'] = 70 #40
 params['xvals'] = np.array(list(range(params['x_min'],params['x_max'],1)))/10
 params['yvals'] = np.array(list(range(params['y_min'],params['y_max'],1)))/10
+
+#Constants for Optimization
+params['solver_type'] = 'gridsearch'
+params['gridsearch_num'] = 21
+params['p_x_max_per_mile'] = params['support_v'][1]
+
 #####for profit vs EEPP_coeff
 params['multiprocessing'] = False
 params['scenario'] = 'ssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers

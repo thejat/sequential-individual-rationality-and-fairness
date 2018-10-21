@@ -67,8 +67,9 @@ def opt_profits_given_multiplier(params):
 	customers[1] = {}
 	customers[1]['s'] = np.array([0,0]) #np.array([3,0])
 	customers[1]['d'] = np.array([2.5,0]) #np.array([-3,0])
-	customers[1]['p_s'] = params['p_s_1']
-	customers[1]['p_x'] = params['support_v'][1]
+	customers[1]['sd']  = distance(customers[1]['s'],customers[1]['d'])
+	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
+	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
 
 	for idx in [1]:
 		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
@@ -77,7 +78,7 @@ def opt_profits_given_multiplier(params):
 		customers[idx]['actual_detour_wo_j'] = 0
 		customers[idx]['is_bootstrapped'] = True
 
-	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'])
+	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'],customers[1]['sd'])
 	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_s'],customers[1]['delta_bar'],customers[1]['k_delta_bar'],customers[1]['sd'])
 
 
