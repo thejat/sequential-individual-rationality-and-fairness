@@ -349,8 +349,8 @@ def maximize_incremental_profit_j(params,customers):
 		# print('\nUsing Gridsearch:')
 		px_gridvals = np.linspace(px_lb,px_ub,num=gridsearch_num)
 		ps_gridvals = np.linspace(ps_lb,ps_ub,num=gridsearch_num)
-		print('px_gridvals',px_gridvals/customers[customer_j]['sd'])
-		print('ps_gridvals',ps_gridvals/customers[customer_j]['sd'])
+		# print('px_gridvals normalized',px_gridvals/customers[customer_j]['sd'])
+		# print('ps_gridvals normalized',ps_gridvals/customers[customer_j]['sd'])
 		profit_surface = np.zeros((gridsearch_num,gridsearch_num))
 
 		for idxx,p_x_var in enumerate(px_gridvals):
@@ -378,10 +378,10 @@ def maximize_incremental_profit_j(params,customers):
 
 		if temp_threshold >= support_v[1]:
 			v_ubar_opt = support_v[1]
-			print('v_ubar_opt clipped to ', v_ubar_opt)
+			# print('v_ubar_opt clipped to ', v_ubar_opt)
 		elif temp_threshold <= 2*support_v[0] - support_v[1]:
 			v_ubar_opt = support_v[0]
-			print('v_ubar_opt clipped to ', v_ubar_opt)
+			# print('v_ubar_opt clipped to ', v_ubar_opt)
 		else:
 			# print('temp_threshold',temp_threshold)
 			v_ubar_opt = phi_v_inv(temp_threshold,support_v)
@@ -421,14 +421,16 @@ if __name__=='__main__':
 
 
 	params['scenario'] = 'ssd'
+	# params['solver_type'] = 'closed_form'
 
 	print('Run scenario: ',params['scenario'])
+	print('Run solver type', params['solver_type'])
 
 	#Initialize customer 1
 	customers = OrderedDict()
 	customers[1] = {}
-	customers[1]['s'] = np.array([3,0])
-	customers[1]['d'] = np.array([-3,0])
+	customers[1]['s'] = np.array([0,0])
+	customers[1]['d'] = np.array([2.5,0])
 	customers[1]['sd']  = distance(customers[1]['s'],customers[1]['d'])
 	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
 	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
@@ -437,7 +439,7 @@ if __name__=='__main__':
 
 	#Initialize customer 2
 	customers[2] = {}	
-	customers[2]['s'] = np.array([4,-3])
+	customers[2]['s'] = np.array([1,.1])
 	if params['scenario']=='ssd' or params['scenario']=='sssd':
 		customers[2]['d'] = customers[1]['d']
 	elif params['scenario']=='sdsd':
@@ -478,6 +480,7 @@ if __name__=='__main__':
 	print('expost penalty sum: ',expost_penalty_sum)
 	print('prbx,probp,incrpex,incpp,expp',prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
 
+	print('scaled: p_x',prices_j['p_x']/customers[customer_j]['sd'],'p_s',prices_j['p_s']/customers[customer_j]['sd'])
 
 	if params['scenario']=='sssd':
 

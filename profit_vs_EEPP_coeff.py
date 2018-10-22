@@ -82,7 +82,7 @@ def opt_profits_given_multiplier(params):
 
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
-	customers[2]['s'] = np.array([customers[1]['d'][0]/2,1])
+	customers[2]['s'] = np.array([customers[1]['d'][0]/2,0.5])
 	customers[2]['d'] = customers[1]['d']
 	customers[2]['delta_bar'] = params['delta_same']
 	customers[2]['k_delta_bar'] = degradation(customers[2]['delta_bar'],params['degradation_multiplier'],	params['k_bar'])
@@ -116,17 +116,18 @@ def opt_profits_given_multiplier(params):
 			# data['profitvals_choose_pool'][idxi,idxj] = incr_profit_pool_val
 			# data['profitvals_choose_exclu'][idxi,idxj] = incr_profit_exclusive_val
 			# data['profitvals_choose_exclu_vs_pool'][idxi,idxj] = incr_profit_exclusive_val - incr_profit_pool_val
-			# data['profitvals_choose_exclu_vs_pool_sign'][idxi,idxj] = np.sign(incr_profit_exclusive_val - incr_profit_pool_val)           
-			data['prob_pool'][idxi,idxj] = prob_pool_val
+			# data['profitvals_choose_exclu_vs_pool_sign'][idxi,idxj] = np.sign(incr_profit_exclusive_val - incr_profit_pool_val)
+			threshold_min_prob = 1e-3           
+			data['prob_pool'][idxi,idxj] = prob_pool_val*indicator_of(prob_pool_val > threshold_min_prob)
 			data['prob_exclusive'][idxi,idxj] = prob_exclusive_val
-			data['prob_nothing'][idxi,idxj] = 1 - prob_pool_val - prob_exclusive_val
+			data['prob_nothing'][idxi,idxj] = 1 - data['prob_pool'][idxi,idxj] - prob_exclusive_val
 			data['t_j'][idxi,idxj] = t_j
 
 			threshold_circle = 5e-2
 			data['circle_s1d'][idxi,idxj] = indicator_of(abs(distance(np.array([i,j]),customers[1]['s']) -customers[1]['sd']) < threshold_circle)
 
 
-			if params['scenario'] == 'sdsd' and t_j ==2:
+			if t_j ==2:
 				temp_circle_val = source_detour_for_j(customers) - customers[1]['delta_bar']*customers[1]['sd']
 
 				data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
@@ -146,13 +147,13 @@ def opt_profits_given_multiplier(params):
 				data['circle_delta_2_bar'][idxi,idxj] = 0			
 				data['circle_delta_2_bar_region'][idxi,idxj] = 1
 
-			
+			threshold_foc = 1e-2
 			if params['scenario'] == 'ssd':
 				temp_penalty = get_incremental_penalty([customers[1]['p_x'],customers[1]['p_s']],customers,1,params['degradation_multiplier'],params['support_v'],params['k_bar'])
 
 				data['foc_condition'][idxi,idxj] = params['c_op']*(customers[2]['sd']*customers[2]['k_delta_bar'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*temp_penalty
 
-				data['foc_condition_boundary'][idxi,idxj] = indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_circle)
+				data['foc_condition_boundary'][idxi,idxj] = indicator_of(abs(data['foc_condition'][idxi,idxj]) < threshold_foc)
 				data['foc_condition_boundary_overlay_prob_pool'][idxi,idxj] = (.1 + data['prob_pool'][idxi,idxj])*(1-data['foc_condition_boundary'][idxi,idxj])
 
 
@@ -196,14 +197,15 @@ def plot_data(data_params_customers,EEPP_coeff):
 		fig.clf()
 
 
+#Global constants
+# EEPP_coeff_array = [params['EEPP_coeff']] 
+EEPP_coeff_array = [0.1,1,10,50,100,1000]
+# EEPP_coeff_array = [1]
+
+
 if __name__=='__main__':
 	params['start_time'] = time.time()
 	print('Run scenario: ',params['scenario'])
-
-	# EEPP_coeff_array = [params['EEPP_coeff']] 
-	# EEPP_coeff_array = [0.1,1,10,50,100,1000]
-	EEPP_coeff_array = [1]
-
 	print('EEPP_coeff_array is',EEPP_coeff_array)
 
 	if params['multiprocessing'] is True:

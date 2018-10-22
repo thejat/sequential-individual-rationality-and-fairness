@@ -16,13 +16,13 @@ plt.rcParams['figure.titlesize']= 30
 
 #Constants for Model
 params = {}
-params['c_op'] 	=  .08 #0.32  #operational cost per unit time
+params['c_op'] 	=  .1 #0.32  #operational cost per unit time
 params['delta_same'] =  .3#0.54  #fixed promise by the firm
 params['support_v'] = (0,1)
-params['degradation_multiplier'] = 3
+params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = .25 #3
-params['p_s_1_per_mile'] = 0.35
-params['k_bar'] = 0.8
+params['p_s_1_per_mile'] = 0.15
+params['k_bar'] = 1
 
 
 #Constants for Experiment
@@ -41,7 +41,7 @@ params['p_x_max_per_mile'] = params['support_v'][1]
 
 #####for profit vs EEPP_coeff
 params['multiprocessing'] = False
-params['scenario'] = 'ssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'sdsd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 params['nprocesses'] = 8
 params['all_data_keys'] = [
 	'profitval',
