@@ -68,13 +68,14 @@ def opt_profits_given_multiplier(params):
 	customers[1]['s'] = np.array([0,0]) #np.array([3,0])
 	customers[1]['d'] = np.array([2.5,0]) #np.array([-3,0])
 	customers[1]['sd']  = distance(customers[1]['s'],customers[1]['d'])
-	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
-	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
 	customers[1]['delta_bar'] = params['delta_same']
 	customers[1]['k_delta_bar'] = degradation(customers[1]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
 	customers[1]['actual_detour_wo_j'] = 0
 	customers[1]['is_bootstrapped'] = True
 
+	#Pricing for Customer 1
+	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
+	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
 	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'],customers[1]['sd'])
 	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_s'],customers[1]['delta_bar'],customers[1]['k_delta_bar'],customers[1]['sd'])
 
@@ -84,14 +85,32 @@ def opt_profits_given_multiplier(params):
 	customers[2] = {}
 	customers[2]['s'] = np.array([customers[1]['d'][0]/2,0.5])
 	customers[2]['d'] = customers[1]['d']
+	customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
 	customers[2]['delta_bar'] = params['delta_same']
 	customers[2]['k_delta_bar'] = degradation(customers[2]['delta_bar'],params['degradation_multiplier'],	params['k_bar'])
 	customers[2]['actual_detour_wo_j'] = 0
 	customers[2]['is_bootstrapped'] = False
 
+	if params['scenario']=='sssd':
+
+		#Pricing for Customer 2
+		prices_2 = solve_for_customer_j_wrapper(customers,params)
+		customers = update_customer_information_sssd(customers,prices_2)
+
+		#Initialize customer 3		
+		customers[3] = {}
+		customers[3]['s'] = np.array([1.7,-.3])
+		customers[3]['d'] = customers[1]['d']
+		customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
+		customers[3]['delta_bar'] = params['delta_same']
+		customers[3]['k_delta_bar'] = degradation(customers[3]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+		customers[3]['actual_detour_wo_j'] = 0
+		customers[3]['is_bootstrapped'] = False
+
+
 	for idxi,i in enumerate(params['xvals']):
 		
-		print('Time elapsed:','%.3f'%(time.time()-params['start_time']),'EEPP_coeff',params['EEPP_coeff'],': Cust2 xloc is ', i,' of ',params['xvals'][-1])
+		print('Time elapsed:','%.3f'%(time.time()-params['start_time']),'EEPP_coeff',params['EEPP_coeff'],': CustJ xloc is ', i,' of ',params['xvals'][-1])
 
 		for idxj,j in enumerate(params['yvals']):
 			

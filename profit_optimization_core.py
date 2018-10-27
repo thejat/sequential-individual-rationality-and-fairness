@@ -101,6 +101,10 @@ def prob_pool_j(p_x,p_s,sidi,support_v,k_delta_bar,flag_print_arguments=False):
 	'''
 	v_ubar = (p_x - p_s)/((1-k_delta_bar)*sidi)
 	v_lbar = p_s/(k_delta_bar*sidi)
+
+	# print('v_ubar',v_ubar)
+	# print('v_lbar',v_lbar)
+
 	if v_ubar-v_lbar < -1e-4: #HARDCODED	
 		print('WARNING: Prob(Shared) computation issue. Returning 0')
 		if flag_print_arguments is True:
@@ -250,6 +254,7 @@ def get_incremental_profit_adding_j_components(x,customers,c_op,support_v,degrad
 
 	prob_exclusive_val = prob_exclusive_j(p_x,p_s,customers[customer_j]['sd'],support_v,customers[customer_j]['k_delta_bar'])
 
+	# print('DEBUG: call in profit adding j')
 	prob_pool_val,tempa,tempb = prob_pool_j(p_x,p_s,customers[customer_j]['sd'],support_v,customers[customer_j]['k_delta_bar'])
 
 	incr_profit_exclusive_val = p_x - c_op*customers[customer_j]['sd']
@@ -282,6 +287,7 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_b
 	v_ubar_before_j = p_s/(k_delta_ijm1*customers[idx]['sd'])
 	v_ubar_after_j = p_s/(k_delta_ij*customers[idx]['sd'])
 
+	# print('DEBUG: call in incremental penalty. px',p_x,' p_s',p_s)
 	prob_pool_val,v_ubar,v_lbar =  prob_pool_j(p_x,p_s,customers[idx]['sd'],support_v,customers[idx]['k_delta_bar'])
 
 	if customers[idx]['is_bootstrapped'] is True:
@@ -411,54 +417,7 @@ def maximize_incremental_profit_j(params,customers):
 
 	return (profit,{'p_x':p_x_opt,'p_s':p_s_opt},profit_surface)
 
-def update_detours(customers):
-	print('ERROR: NOT IMPLEMENTED FOR SSSD etc')
-	return customers
-
-#=========================================
-
-if __name__=='__main__':
-
-
-	params['scenario'] = 'ssd'
-	# params['solver_type'] = 'closed_form'
-
-	print('Run scenario: ',params['scenario'])
-	print('Run solver type', params['solver_type'])
-
-	#Initialize customer 1
-	customers = OrderedDict()
-	customers[1] = {}
-	customers[1]['s'] = np.array([0,0])
-	customers[1]['d'] = np.array([2.5,0])
-	customers[1]['sd']  = distance(customers[1]['s'],customers[1]['d'])
-	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
-	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
-	customers[1]['is_bootstrapped'] = True
-	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'],customers[1]['sd'])
-
-	#Initialize customer 2
-	customers[2] = {}	
-	customers[2]['s'] = np.array([1,.1])
-	if params['scenario']=='ssd' or params['scenario']=='sssd':
-		customers[2]['d'] = customers[1]['d']
-	elif params['scenario']=='sdsd':
-		customers[2]['d'] = np.array([2,-.5])
-
-
-	#Initialization for customers 1 and 2
-	for idx in customers:
-		customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
-		customers[idx]['delta_bar'] = params['delta_same']
-		customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
-		customers[idx]['actual_detour_wo_j'] = 0
-		if idx !=1:
-			customers[idx]['is_bootstrapped'] = False
-
-	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_s'],customers[1]['delta_bar'],customers[1]['k_delta_bar'],customers[1]['sd'])
-
-
-	#Solving for prices for customer 2
+def solve_for_customer_j_wrapper(customers,params):
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
 	t_j,temp_route = opt_customer_to_drop_after_j(customers)
@@ -473,53 +432,90 @@ if __name__=='__main__':
 	print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
 
 
-
-
 	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices_j['p_x'],prices_j['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j,params['k_bar'])
-
-	print('expost penalty sum: ',expost_penalty_sum)
 	print('prbx,probp,incrpex,incpp,expp',prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
-
 	print('scaled: p_x',prices_j['p_x']/customers[customer_j]['sd'],'p_s',prices_j['p_s']/customers[customer_j]['sd'])
+
+	return prices_j
+
+
+def update_customer_information_sssd(customers,prices_j):
+
+	customers[1]['actual_detour_wo_j'] = customers[1]['actual_detour_w_j']
+	customers[2]['actual_detour_wo_j'] = customers[2]['actual_detour_w_j']
+
+	customers[2]['p_x'] = prices_j['p_x']
+	customers[2]['p_s'] = prices_j['p_s']
+
+	del customers[1]['actual_detour_w_j']
+	del customers[2]['actual_detour_w_j']
+
+	return customers
+
+
+#=========================================
+
+if __name__=='__main__':
+
+
+	params['scenario'] = 'sssd'
+	# params['solver_type'] = 'closed_form'
+
+	print('Run scenario: ',params['scenario'])
+	print('Run solver type', params['solver_type'])
+
+	#Initialize customer 1
+	customers = OrderedDict()
+	customers[1] = {}
+	customers[1]['s'] = np.array([0,0])
+	customers[1]['d'] = np.array([2.5,0])
+	customers[1]['sd']  = distance(customers[1]['s'],customers[1]['d'])
+	customers[1]['delta_bar'] = params['delta_same']
+	customers[1]['k_delta_bar'] = degradation(customers[1]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+	customers[1]['actual_detour_wo_j'] = 0
+	customers[1]['is_bootstrapped'] = True
+	
+	#Pricing for Customer 1
+	customers[1]['p_s'] = params['p_s_1_per_mile']*customers[1]['sd']
+	customers[1]['p_x'] = params['support_v'][1]*customers[1]['sd']
+	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'],customers[1]['sd'])
+	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_s'],customers[1]['delta_bar'],customers[1]['k_delta_bar'],customers[1]['sd'])
+
+	#Initialize customer 2
+	customers[2] = {}	
+	customers[2]['s'] = np.array([.5,.5])
+	if params['scenario']=='ssd' or params['scenario']=='sssd':
+		customers[2]['d'] = customers[1]['d']
+	elif params['scenario']=='sdsd':
+		customers[2]['d'] = np.array([2,-.5])
+	customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
+	customers[2]['delta_bar'] = params['delta_same']
+	customers[2]['k_delta_bar'] = degradation(customers[2]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+	customers[2]['actual_detour_wo_j'] = 0
+	customers[2]['is_bootstrapped'] = False
+
+
+
+	#Solving for prices for customer 2
+	prices_j = solve_for_customer_j_wrapper(customers,params)
+
+	print(customers)
 
 	if params['scenario']=='sssd':
 
-		customers[2]['p_s'] = prices_j['p_x']
-		customers[2]['p_x'] = prices_j['p_s']
-
-		customers = update_detours(customers)
-
+		customers = update_customer_information_sssd(customers,prices_j)
+		print(customers)
 
 		#Initialize customer 3		
 		customers[3] = {}
 		customers[3]['s'] = np.array([1.7,-.3])
 		customers[3]['d'] = customers[1]['d']
+		customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
+		customers[3]['delta_bar'] = params['delta_same']
+		customers[3]['k_delta_bar'] = degradation(customers[3]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+		customers[3]['actual_detour_wo_j'] = 0
+		customers[3]['is_bootstrapped'] = False
 
 
-		#REPEATED AND SLIGHTLY MODIFIED 1
-		for idx in [3]:
-			customers[idx]['sd']  = distance(customers[idx]['s'],customers[idx]['d'])
-			customers[idx]['delta_bar'] = params['delta_same']
-			customers[idx]['k_delta_bar'] = degradation(customers[idx]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
-			customers[idx]['actual_detour_wo_j'] = 0
-			if idx !=1:
-				customers[idx]['is_bootstrapped'] = False
-
-
-
-		#REPEATED 2
-		customer_j = len(customers)
-		active_customer_idxes = active_customers_j(customers)
-		t_j,temp_route = opt_customer_to_drop_after_j(customers)
-		customers = set_actual_detours_w_j(customers,t_j)
-
-		print('customer_j',customer_j,'active_customer_idxes',active_customer_idxes)
-		for idx in customers:
-			print('customer ',idx,': sd',customers[idx]['sd'],'delta_bar',customers[idx]['delta_bar'],'k_delta_bar',customers[idx]['k_delta_bar'],'wo_j',customers[idx]['actual_detour_wo_j'],'w_j',customers[idx]['actual_detour_w_j'])
-		print('t_j',t_j,'temp_route',temp_route)
-		# print(customers)
-
-		[incremental_profit_j,prices_j,incremental_profit_j_surface] = maximize_incremental_profit_j(params,customers)
-		print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
-
+		solve_for_customer_j_wrapper(customers,params)
 
