@@ -458,8 +458,7 @@ def update_customer_information_sssd(customers,prices_j):
 if __name__=='__main__':
 
 
-	params['scenario'] = 'sssd'
-	# params['solver_type'] = 'closed_form'
+	params['scenario'] = 'ssssd'
 
 	print('Run scenario: ',params['scenario'])
 	print('Run solver type', params['solver_type'])
@@ -501,7 +500,7 @@ if __name__=='__main__':
 
 	print(customers)
 
-	if params['scenario']=='sssd':
+	if params['scenario'] in ['sssd','ssssd']:
 
 		customers = update_customer_information_sssd(customers,prices_j)
 		print(customers)
@@ -517,5 +516,23 @@ if __name__=='__main__':
 		customers[3]['is_bootstrapped'] = False
 
 
-		solve_for_customer_j_wrapper(customers,params)
+		prices_j = solve_for_customer_j_wrapper(customers,params)
 
+
+	if params['scenario']=='ssssd':
+
+		customers = update_customer_information_sssd(customers,prices_j)
+		print(customers)
+
+		#Initialize customer 4		
+		customers[4] = {}
+		customers[4]['s'] = np.array([2,0.1])
+		customers[4]['d'] = customers[1]['d']
+		customers[4]['sd']  = distance(customers[4]['s'],customers[4]['d'])
+		customers[4]['delta_bar'] = params['delta_same']
+		customers[4]['k_delta_bar'] = degradation(customers[4]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+		customers[4]['actual_detour_wo_j'] = 0
+		customers[4]['is_bootstrapped'] = False
+
+
+		prices_j = solve_for_customer_j_wrapper(customers,params)
