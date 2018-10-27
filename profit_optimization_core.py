@@ -457,9 +457,6 @@ def update_customer_information_sssd(customers,prices_j):
 
 if __name__=='__main__':
 
-
-	params['scenario'] = 'ssssd'
-
 	print('Run scenario: ',params['scenario'])
 	print('Run solver type', params['solver_type'])
 
