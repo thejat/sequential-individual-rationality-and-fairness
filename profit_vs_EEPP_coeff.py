@@ -95,7 +95,7 @@ def opt_profits_given_multiplier(params):
 
 		#Pricing for Customer 2
 		prices_2 = solve_for_customer_j_wrapper(customers,params)
-		customers = update_customer_information_sssd(customers,prices_2)
+		customers = update_customer_information(customers,prices_2)
 
 		#Initialize customer 3		
 		customers[3] = {}

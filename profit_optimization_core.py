@@ -439,16 +439,15 @@ def solve_for_customer_j_wrapper(customers,params):
 	return prices_j
 
 
-def update_customer_information_sssd(customers,prices_j):
+def update_customer_information(customers,prices_j):
 
-	customers[1]['actual_detour_wo_j'] = customers[1]['actual_detour_w_j']
-	customers[2]['actual_detour_wo_j'] = customers[2]['actual_detour_w_j']
+	customer_j = len(customers)
+	for idx in customers:
+		customers[idx]['actual_detour_wo_j'] = customers[idx]['actual_detour_w_j']
+		del customers[idx]['actual_detour_w_j']
 
-	customers[2]['p_x'] = prices_j['p_x']
-	customers[2]['p_s'] = prices_j['p_s']
-
-	del customers[1]['actual_detour_w_j']
-	del customers[2]['actual_detour_w_j']
+	customers[customer_j]['p_x'] = prices_j['p_x']
+	customers[customer_j]['p_s'] = prices_j['p_s']
 
 	return customers
 
@@ -480,7 +479,7 @@ if __name__=='__main__':
 	#Initialize customer 2
 	customers[2] = {}	
 	customers[2]['s'] = np.array([.5,.5])
-	if params['scenario']=='ssd' or params['scenario']=='sssd':
+	if params['scenario'] in ['ssd','sssd','ssssd']:
 		customers[2]['d'] = customers[1]['d']
 	elif params['scenario']=='sdsd':
 		customers[2]['d'] = np.array([2,-.5])
@@ -499,7 +498,7 @@ if __name__=='__main__':
 
 	if params['scenario'] in ['sssd','ssssd']:
 
-		customers = update_customer_information_sssd(customers,prices_j)
+		customers = update_customer_information(customers,prices_j)
 		print(customers)
 
 		#Initialize customer 3		
@@ -518,7 +517,7 @@ if __name__=='__main__':
 
 	if params['scenario']=='ssssd':
 
-		customers = update_customer_information_sssd(customers,prices_j)
+		customers = update_customer_information(customers,prices_j)
 		print(customers)
 
 		#Initialize customer 4		
