@@ -79,8 +79,6 @@ def opt_profits_given_multiplier(params):
 	assert_p_s_1_greater_than_c_op(customers[1]['p_s'],params['c_op'],customers[1]['sd'])
 	assert_ex_ante_customer1_IR(params['support_v'],customers[1]['p_s'],customers[1]['delta_bar'],customers[1]['k_delta_bar'],customers[1]['sd'])
 
-
-
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
 	customers[2]['s'] = np.array([.5,.5])  #HARDCODE
@@ -91,11 +89,11 @@ def opt_profits_given_multiplier(params):
 	customers[2]['actual_detour_wo_j'] = 0
 	customers[2]['is_bootstrapped'] = False
 
-	if params['scenario']=='sssd':
+	if params['scenario'] in ['sssd','ssssd']:
 
 		#Pricing for Customer 2
-		prices_2 = solve_for_customer_j_wrapper(customers,params)
-		customers = update_customer_information(customers,prices_2)
+		prices_j = solve_for_customer_j_wrapper(customers,params)
+		customers = update_customer_information(customers,prices_j)
 
 		#Initialize customer 3		
 		customers[3] = {}
@@ -106,6 +104,22 @@ def opt_profits_given_multiplier(params):
 		customers[3]['k_delta_bar'] = degradation(customers[3]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
 		customers[3]['actual_detour_wo_j'] = 0
 		customers[3]['is_bootstrapped'] = False
+
+	if params['scenario'] == 'ssssd':
+
+		#Pricing for Customer 3
+		prices_j = solve_for_customer_j_wrapper(customers,params)
+		customers = update_customer_information(customers,prices_j)
+
+		#Initialize customer 4		
+		customers[4] = {}
+		customers[4]['s'] = np.array([2,0.1])
+		customers[4]['d'] = customers[1]['d']
+		customers[4]['sd']  = distance(customers[4]['s'],customers[4]['d'])
+		customers[4]['delta_bar'] = params['delta_same']
+		customers[4]['k_delta_bar'] = degradation(customers[4]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+		customers[4]['actual_detour_wo_j'] = 0
+		customers[4]['is_bootstrapped'] = False
 
 
 	for idxi,i in enumerate(params['xvals']):
@@ -123,6 +137,9 @@ def opt_profits_given_multiplier(params):
 			elif params['scenario']=='sssd':
 				customers[3]['s'] = np.array([i,j])
 				customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
+			elif params['scenario']=='ssssd':
+				customers[4]['s'] = np.array([i,j])
+				customers[4]['sd']  = distance(customers[4]['s'],customers[4]['d'])
 			else:
 				print('ERROR: scenario is incorrectly specified.')
 				break
@@ -181,8 +198,24 @@ def opt_profits_given_multiplier(params):
 					data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
 
+			if params['scenario']=='ssssd':
 
-			if params['scenario'] in ['ssd','sssd']:
+					temp_circle_val = distance(customers[1]['s'],customers[2]['s']) + distance(customers[2]['s'],customers[3]['s']) + distance(customers[3]['s'],customers[4]['s']) + distance(customers[4]['s'],customers[1]['d']) - (1 +customers[1]['delta_bar'])*customers[1]['sd']
+
+					data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
+					data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
+
+					temp_circle_val = distance(customers[2]['s'],customers[3]['s']) + distance(customers[3]['s'],customers[4]['s']) + distance(customers[4]['s'],customers[1]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd']					
+
+					data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
+					data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
+
+					temp_circle_val = distance(customers[3]['s'],customers[4]['s']) + distance(customers[4]['s'],customers[1]['d']) - (1 +customers[3]['delta_bar'])*customers[3]['sd']					
+
+					data['circle_delta_3_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
+					data['circle_delta_3_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
+
+			if params['scenario'] in ['ssd','sssd','ssssd']:
 				threshold_foc = 1e-2
 
 				data['foc_condition'][idxi,idxj] = params['c_op']*(customers[customer_j]['sd']*customers[customer_j]['k_delta_bar'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
@@ -193,11 +226,11 @@ def opt_profits_given_multiplier(params):
 
 
 	data['profitval_and_prob_pool'] = data['profitval']*np.sign(data['prob_pool'])#-np.min(data['prob_pool'])
-	temp1 = .1 + data['profitval_and_prob_pool']
+	temp1 = 1e-1 + data['profitval_and_prob_pool']
 	temp2 = 1 - data['circle_delta_1_bar']
 	temp3 = 1 - data['circle_delta_2_bar']
-	data['profitval_and_prob_pool_and_delta1bar_delta2bar'] = temp1*temp2*temp3
-	data['circle_delta_bars_intersection'] = data['circle_delta_1_bar_region']*data['circle_delta_2_bar_region']
+	temp4 = 1 - data['circle_delta_3_bar']	
+	data['profitval_and_prob_pool_and_deltabars'] = temp1*temp2*temp3*temp4
 
 	return {'data':data,'params':params,'customers':customers}
 	# pickle.dump(all_data,open('./output/all_data.pkl','wb'))
@@ -210,8 +243,8 @@ def plot_data(data_params_customers,EEPP_coeff):
 	s1x,s1y = idx_of_point(params['xvals'],params['yvals'],customers[1]['s'])
 	d1x,d1y = idx_of_point(params['xvals'],params['yvals'],customers[1]['d'])
 	s2x,s2y = idx_of_point(params['xvals'],params['yvals'],customers[2]['s'])
-	# d2x,d2y = idx_of_point(params['xvals'],params['yvals'],customers[2]['d'])
-	# s3x,s3y = idx_of_point(params['xvals'],params['yvals'],customers[3]['s'])
+	if params['scenario'] in ['sssd','ssssd']:
+		s3x,s3y = idx_of_point(params['xvals'],params['yvals'],customers[3]['s'])
 
 	for key in params['plot_keys']:
 		temp = pd.DataFrame(data=data[key],index=params['xvals'],columns=params['yvals'])
@@ -224,9 +257,10 @@ def plot_data(data_params_customers,EEPP_coeff):
 	
 		ax.scatter(s1y,s1x, marker='*', s=100, color='red') 
 		ax.scatter(d1y,d1x, marker='*', s=100, color='red')
-		if params['scenario'] in ['sdsd','sssd']:
+		if params['scenario'] in ['sdsd','sssd','ssssd']:
 			ax.scatter(s2y,s2x, marker='*', s=100, color='red') 
-		# ax.scatter(d2y,d2x, marker='*', s=100, color='red') 
+		if params['scenario'] in ['ssssd']:
+			ax.scatter(s3y,s3x, marker='*', s=100, color='red') 
 		fig = ax.get_figure()
 		fig.savefig('./output/'+key+'_multiplier'+str(EEPP_coeff)+'.png', bbox_inches='tight', pad_inches=0)
 		fig.clf()
@@ -234,7 +268,7 @@ def plot_data(data_params_customers,EEPP_coeff):
 
 #Global constants
 # EEPP_coeff_array = [params['EEPP_coeff']] 
-# EEPP_coeff_array = [0.25,1,10,50,100,1000,100000]
+EEPP_coeff_array = [0.25,1,10,50,100,1000,100000]
 
 if __name__=='__main__':
 	params['start_time'] = time.time()

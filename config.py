@@ -16,11 +16,11 @@ plt.rcParams['figure.titlesize']= 30
 
 #Constants for Model
 params = {}
-params['c_op'] 	=  .1 #0.32  #operational cost per unit time
-params['delta_same'] =  .3#0.54  #fixed promise by the firm
+params['c_op'] 	=  .1
+params['delta_same'] =  .3
 params['support_v'] = (0,1)
 params['degradation_multiplier'] = 2
-params['EEPP_coeff'] = .25 #3
+params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
 params['k_bar'] = 1
 params['scenario'] = 'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
@@ -58,8 +58,7 @@ params['all_data_keys'] = [
 	'circle_delta_1_bar',
 	'circle_delta_2_bar',
 	'circle_delta_3_bar',
-	'profitval_and_prob_pool_and_delta1bar_delta2bar_delta3bar',
-	'circle_delta_bars_intersection',
+	'profitval_and_prob_pool_and_deltabars',
 	'circle_delta_1_bar_region',
 	'circle_delta_2_bar_region',
 	'circle_delta_3_bar_region',
@@ -81,8 +80,7 @@ params['plot_keys'] = [
 	# 'circle_delta_1_bar',
 	# 'circle_delta_2_bar',
 	# 'circle_delta_3_bar',
-	'profitval_and_prob_pool_and_delta1bar_delta2bar_delta3bar',
-	# 'circle_delta_bars_intersection',
+	'profitval_and_prob_pool_and_deltabars',
 	# 'circle_delta_1_bar_region',
 	# 'circle_delta_2_bar_region',
 	# 'circle_delta_3_bar_region',

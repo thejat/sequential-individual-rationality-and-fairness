@@ -503,7 +503,7 @@ if __name__=='__main__':
 
 		#Initialize customer 3		
 		customers[3] = {}
-		customers[3]['s'] = np.array([1.7,-.3])
+		customers[3]['s'] = np.array([1.7,.3])
 		customers[3]['d'] = customers[1]['d']
 		customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
 		customers[3]['delta_bar'] = params['delta_same']
