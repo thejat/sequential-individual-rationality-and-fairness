@@ -386,22 +386,17 @@ def maximize_incremental_profit_j(params,customers):
 		#boundary condition
 		boundary_condition = c_op*(customers[customer_j]['sd']*k_delta_bar - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
 
-		#Solve for v_ubar_opt
-		temp_val_nr = c_op*(customers[customer_j]['sd'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
-		temp_val_dr = (1 - k_delta_bar)*customers[customer_j]['sd']			
-		temp_threshold = temp_val_nr/temp_val_dr
-
-
 
 		if boundary_condition <= 0:
 			#exterior location
 
-			if temp_threshold >= support_v[1]:
+			if c_op >= support_v[1]:
 				v_ubar_opt = support_v[1]
-				print('v_ubar_opt clipped above to ', v_ubar_opt)
-			elif temp_threshold <= 2*support_v[0] - support_v[1]:
+				# print('v_ubar_opt clipped above to ', v_ubar_opt)
+			elif c_op <= 2*support_v[0] - support_v[1]:
 				v_ubar_opt = support_v[0]
-				print('ERROR: v_ubar_opt clipped below to ', v_ubar_opt)
+				print(customers)
+				print('ERROR: exterior location: v_ubar_opt clipped below to ', v_ubar_opt)
 			else:
 				v_ubar_opt = phi_v_inv(c_op,support_v)
 
@@ -409,15 +404,21 @@ def maximize_incremental_profit_j(params,customers):
 
 		else:
 			#interior location
+
+			#Solve for v_ubar_opt
+			temp_val_nr = c_op*(customers[customer_j]['sd'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
+			temp_val_dr = (1 - k_delta_bar)*customers[customer_j]['sd']			
+			temp_threshold = temp_val_nr/temp_val_dr
 			
 			if temp_threshold >= support_v[1]:
 				v_ubar_opt = support_v[1]
-				print('v_ubar_opt clipped above to ', v_ubar_opt)
+				# print('v_ubar_opt clipped above to ', v_ubar_opt)
 			elif temp_threshold <= 2*support_v[0] - support_v[1]:
 				v_ubar_opt = support_v[0]
-				print('ERROR: v_ubar_opt clipped below to ', v_ubar_opt)
+				print(customers)
+				print('ERROR: interior location: v_ubar_opt clipped below to ', v_ubar_opt)
 			else:
-				print('temp_threshold unclipped ',temp_threshold)
+				# print('temp_threshold unclipped ',temp_threshold)
 				v_ubar_opt = phi_v_inv(temp_threshold,support_v)
 
 			#Solve for v_lbar_opt
