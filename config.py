@@ -23,11 +23,12 @@ params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
 params['k_bar'] = 1
-params['scenario'] = 'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'ssd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 
 #Constants for Optimization
-params['solver_type'] = 'closed_form' #'gridsearch' # 
-params['gridsearch_num'] = 21
+params['solver_type'] = 'closed_form' # 
+# params['solver_type'] = 'gridsearch' #
+params['gridsearch_num'] = 101
 params['p_x_max_per_mile'] = params['support_v'][1]
 
 #Location grid

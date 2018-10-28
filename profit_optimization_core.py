@@ -351,6 +351,12 @@ def maximize_incremental_profit_j(params,customers):
 	p_x_opt = initial_guess[0]
 	p_s_opt = initial_guess[1]
 
+	def bounds_satisfied(ub,lb,c):
+		if c <= ub and c >= lb:
+			return True
+		return False
+
+
 	if solver_type == 'gridsearch':
 		# print('\nUsing Gridsearch:')
 		px_gridvals = np.linspace(px_lb,px_ub,num=gridsearch_num)
@@ -361,7 +367,7 @@ def maximize_incremental_profit_j(params,customers):
 
 		for idxx,p_x_var in enumerate(px_gridvals):
 			for idxs,p_s_var in enumerate(ps_gridvals):
-				if pricing_feasibility_constraint([p_x_var,p_s_var],k_delta_bar) >= 0:
+				if (pricing_feasibility_constraint([p_x_var,p_s_var],k_delta_bar) >= 0) and bounds_satisfied(px_ub,px_lb,p_x_var) and bounds_satisfied(ps_ub,ps_lb,p_s_var):
 
 					profit_var = get_incremental_profit_adding_j([p_x_var,p_s_var],customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 
@@ -384,12 +390,12 @@ def maximize_incremental_profit_j(params,customers):
 
 		if temp_threshold >= support_v[1]:
 			v_ubar_opt = support_v[1]
-			# print('v_ubar_opt clipped to ', v_ubar_opt)
+			print('v_ubar_opt clipped above to ', v_ubar_opt)
 		elif temp_threshold <= 2*support_v[0] - support_v[1]:
 			v_ubar_opt = support_v[0]
-			# print('v_ubar_opt clipped to ', v_ubar_opt)
+			print('v_ubar_opt clipped below to ', v_ubar_opt)
 		else:
-			# print('temp_threshold',temp_threshold)
+			print('temp_threshold unclipped ',temp_threshold)
 			v_ubar_opt = phi_v_inv(temp_threshold,support_v)
 
 		# print('v_ubar_opt',v_ubar_opt)
@@ -436,7 +442,7 @@ def solve_for_customer_j_wrapper(customers,params):
 	print('prbx,probp,incrpex,incpp,expp',prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
 	print('scaled: p_x',prices_j['p_x']/customers[customer_j]['sd'],'p_s',prices_j['p_s']/customers[customer_j]['sd'])
 
-	return prices_j
+	return prices_j,incremental_profit_j_surface
 
 
 def update_customer_information(customers,prices_j):
@@ -478,7 +484,7 @@ if __name__=='__main__':
 
 	#Initialize customer 2
 	customers[2] = {}	
-	customers[2]['s'] = np.array([.5,.5])
+	customers[2]['s'] = np.array([2.8,-0.8]) #np.array([1,1])
 	if params['scenario'] in ['ssd','sssd','ssssd']:
 		customers[2]['d'] = customers[1]['d']
 	elif params['scenario']=='sdsd':
@@ -492,7 +498,7 @@ if __name__=='__main__':
 
 
 	#Solving for prices for customer 2
-	prices_j = solve_for_customer_j_wrapper(customers,params)
+	prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
 
 	print(customers)
 
@@ -512,7 +518,7 @@ if __name__=='__main__':
 		customers[3]['is_bootstrapped'] = False
 
 
-		prices_j = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
 
 
 	if params['scenario']=='ssssd':
@@ -531,4 +537,4 @@ if __name__=='__main__':
 		customers[4]['is_bootstrapped'] = False
 
 
-		prices_j = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)

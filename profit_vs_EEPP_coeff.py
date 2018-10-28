@@ -81,7 +81,7 @@ def opt_profits_given_multiplier(params):
 
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
-	customers[2]['s'] = np.array([.5,.5])  #HARDCODE
+	customers[2]['s'] = np.array([.5,1])  #HARDCODE
 	customers[2]['d'] = customers[1]['d']
 	customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
 	customers[2]['delta_bar'] = params['delta_same']
@@ -92,7 +92,7 @@ def opt_profits_given_multiplier(params):
 	if params['scenario'] in ['sssd','ssssd']:
 
 		#Pricing for Customer 2
-		prices_j = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
 		customers = update_customer_information(customers,prices_j)
 
 		#Initialize customer 3		
@@ -108,7 +108,7 @@ def opt_profits_given_multiplier(params):
 	if params['scenario'] == 'ssssd':
 
 		#Pricing for Customer 3
-		prices_j = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
 		customers = update_customer_information(customers,prices_j)
 
 		#Initialize customer 4		
@@ -267,8 +267,8 @@ def plot_data(data_params_customers,EEPP_coeff):
 
 
 #Global constants
-# EEPP_coeff_array = [params['EEPP_coeff']] 
-EEPP_coeff_array = [0.25,1,10,50,100,1000,100000]
+EEPP_coeff_array = [params['EEPP_coeff']] 
+# EEPP_coeff_array = [0.25,1,10,50,100,1000,100000]
 
 if __name__=='__main__':
 	params['start_time'] = time.time()
