@@ -378,45 +378,58 @@ def maximize_incremental_profit_j(params,customers):
 						p_s_opt = p_s_var
 	elif solver_type == 'closed_form':
 
-		#Solve for v_ubar_opt
+		#penalty computation
 		expost_penalty_sum = 0
 		for idx in active_customer_idxes:
 			expost_penalty_sum += get_incremental_penalty([None,None],customers,idx,degradation_multiplier,support_v,k_bar)
 
+		#boundary condition
+		boundary_condition = c_op*(customers[customer_j]['sd']*k_delta_bar - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
+
+		#Solve for v_ubar_opt
 		temp_val_nr = c_op*(customers[customer_j]['sd'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
-		temp_val_dr = (1 - k_delta_bar)*customers[customer_j]['sd']
-		
-		temp_threshold = temp_val_nr/temp_val_dr
-
-		if temp_threshold >= support_v[1]:
-			v_ubar_opt = support_v[1]
-			print('v_ubar_opt clipped above to ', v_ubar_opt)
-		elif temp_threshold <= 2*support_v[0] - support_v[1]:
-			v_ubar_opt = support_v[0]
-			print('v_ubar_opt clipped below to ', v_ubar_opt)
-		else:
-			print('temp_threshold unclipped ',temp_threshold)
-			v_ubar_opt = phi_v_inv(temp_threshold,support_v)
-
-		# print('v_ubar_opt',v_ubar_opt)
-
-		# RHS of solution validity
-
-		temp_val_nr = c_op*(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j)) + EEPP_coeff*expost_penalty_sum
-		temp_val_dr = k_delta_bar*customers[customer_j]['sd']
-
+		temp_val_dr = (1 - k_delta_bar)*customers[customer_j]['sd']			
 		temp_threshold = temp_val_nr/temp_val_dr
 
 
-		if phi(v_ubar_opt,support_v) <= temp_threshold:
-			#solution at boundary or exterior, no shared ride
-			p_x_opt = v_ubar_opt*customers[customer_j]['sd']
-			p_s_opt = k_delta_bar*p_x_opt
+
+		if boundary_condition <= 0:
+			#exterior location
+
+			if temp_threshold >= support_v[1]:
+				v_ubar_opt = support_v[1]
+				print('v_ubar_opt clipped above to ', v_ubar_opt)
+			elif temp_threshold <= 2*support_v[0] - support_v[1]:
+				v_ubar_opt = support_v[0]
+				print('ERROR: v_ubar_opt clipped below to ', v_ubar_opt)
+			else:
+				v_ubar_opt = phi_v_inv(c_op,support_v)
+
+			v_lbar_opt = v_ubar_opt
+
 		else:
+			#interior location
+			
+			if temp_threshold >= support_v[1]:
+				v_ubar_opt = support_v[1]
+				print('v_ubar_opt clipped above to ', v_ubar_opt)
+			elif temp_threshold <= 2*support_v[0] - support_v[1]:
+				v_ubar_opt = support_v[0]
+				print('ERROR: v_ubar_opt clipped below to ', v_ubar_opt)
+			else:
+				print('temp_threshold unclipped ',temp_threshold)
+				v_ubar_opt = phi_v_inv(temp_threshold,support_v)
+
+			#Solve for v_lbar_opt
+			temp_val_nr = c_op*(source_detour_for_j(customers) + destination_detour_for_j(customers,t_j)) + EEPP_coeff*expost_penalty_sum
+			temp_val_dr = k_delta_bar*customers[customer_j]['sd']
+			temp_threshold = temp_val_nr/temp_val_dr
+			assert phi(v_ubar_opt,support_v) > temp_threshold
 			v_lbar_opt = phi_v_inv(temp_threshold,support_v)
-			p_s_opt = v_lbar_opt*k_delta_bar*customers[customer_j]['sd']
-			p_x_opt = p_s_opt + v_ubar_opt*(1 - k_delta_bar)*customers[customer_j]['sd']
 
+
+		p_s_opt = v_lbar_opt*k_delta_bar*customers[customer_j]['sd']
+		p_x_opt = p_s_opt + v_ubar_opt*(1 - k_delta_bar)*customers[customer_j]['sd']
 		profit = get_incremental_profit_adding_j([p_x_opt,p_s_opt],customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 	else:
 		print('NO SOLVER!')
