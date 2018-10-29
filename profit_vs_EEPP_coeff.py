@@ -156,7 +156,7 @@ def opt_profits_given_multiplier(params):
 			data['px'][idxi,idxj] = prices.get('p_x')
 
 			threshold_min_prob = 1e-3           
-			data['prob_pool'][idxi,idxj] = prob_pool_val*indicator_of(prob_pool_val > threshold_min_prob)
+			data['prob_pool'][idxi,idxj] = prob_pool_val #prob_pool_val*indicator_of(prob_pool_val > threshold_min_prob)
 			data['prob_exclusive'][idxi,idxj] = prob_exclusive_val
 			data['prob_nothing'][idxi,idxj] = 1 - data['prob_pool'][idxi,idxj] - prob_exclusive_val
 			data['t_j'][idxi,idxj] = t_j
@@ -291,8 +291,8 @@ if __name__=='__main__':
 			pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
 
 
-	# for idx,EEPP_coeff in enumerate(EEPP_coeff_array):
-	# 	plot_data(all_data[idx],EEPP_coeff)
+	for idx,EEPP_coeff in enumerate(EEPP_coeff_array):
+		plot_data(all_data[idx],EEPP_coeff)
 	
 	pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
 	print('Experiment finished. Time elapsed', time.time()-params['start_time'])

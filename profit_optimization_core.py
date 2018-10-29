@@ -297,21 +297,32 @@ def get_incremental_penalty(x,customers,idx,degradation_multiplier,support_v,k_b
 		'''
 		v_ubar = support_v[1]
 
+	threshold_integration = 1e-4
+
 	term1ub = min(min(v_ubar_before_j,v_ubar),support_v[1])
 	term1lb = max(min(v_ubar_before_j,v_lbar),support_v[0])
-	term1nr = integrate.quad(lambda vvar: f_v(vvar,support_v)*(k_delta_ijm1*vvar*customers[idx]['sd'] - p_s),
+	if abs(term1ub - term1lb) < threshold_integration:
+		# print('ERROR term1 ub and lb are very close.')
+		term1nr = [0,0]
+	else:
+		term1nr = integrate.quad(lambda vvar: f_v(vvar,support_v)*(k_delta_ijm1*vvar*customers[idx]['sd'] - p_s),
 			term1lb,
 			term1ub)
 
 
 	term2ub = min(min(v_ubar_after_j,v_ubar),support_v[1])
 	term2lb = max(min(v_ubar_after_j,v_lbar),support_v[0])
-	term2nr = integrate.quad(lambda vvar: f_v(vvar,support_v)*(k_delta_ij*vvar*customers[idx]['sd'] - p_s),
+	if abs(term2ub - term2lb) < threshold_integration:
+		# print('ERROR term2 ub and lb are very close.')
+		term2nr = [0,0]
+	else:
+		term2nr = integrate.quad(lambda vvar: f_v(vvar,support_v)*(k_delta_ij*vvar*customers[idx]['sd'] - p_s),
 			term2lb,
 			term2ub)
 
-	# print('term1',term1nr[0],'term1',term2nr[0],'denominator',prob_pool_val)
-	expected_ex_post_penalty = (term1nr[0] - term2nr[0])/(prob_pool_val + 1e-8) #HARDCODE
+	# assert term1nr[0] - term2nr[0] >= 0
+	# print('term1',term1nr[0],'term2',term2nr[0],'denominator',prob_pool_val)
+	expected_ex_post_penalty = max(0,term1nr[0] - term2nr[0])/(prob_pool_val + 1e-8) #HARDCODE
 
 	# print('expected_ex_post_penalty',expected_ex_post_penalty)
 	return expected_ex_post_penalty
@@ -418,7 +429,7 @@ def maximize_incremental_profit_j(params,customers):
 				print(customers)
 				print('ERROR: interior location: v_ubar_opt clipped below to ', v_ubar_opt)
 			else:
-				print('temp_threshold unclipped ',temp_threshold)
+				# print('v_ubar_opt: temp_threshold unclipped ',temp_threshold)
 				v_ubar_opt = phi_v_inv(temp_threshold,support_v)
 
 			#Solve for v_lbar_opt
@@ -426,15 +437,15 @@ def maximize_incremental_profit_j(params,customers):
 			temp_val_dr = k_delta_bar*customers[customer_j]['sd']
 			temp_threshold = temp_val_nr/temp_val_dr
 			assert phi(v_ubar_opt,support_v) > temp_threshold
-			if temp_threshold >= support_v[1]:
-				v_lbar_opt = support_v[1]
-				# print('v_ubar_opt clipped above to ', v_ubar_opt)
-			elif temp_threshold <= 2*support_v[0] - support_v[1]:
-				v_lbar_opt = support_v[0]
-				print(customers)
-				print('ERROR: interior location: v_lbar_opt clipped below to ', v_lbar_opt)
-			else:
-				v_lbar_opt = phi_v_inv(temp_threshold,support_v)
+			# if temp_threshold >= support_v[1]:
+			# 	v_lbar_opt = support_v[1]
+			# 	print('ERROR: interior location: v_lbar_opt clipped above to ', v_lbar_opt)
+			# elif temp_threshold <= 2*support_v[0] - support_v[1]:
+			# 	v_lbar_opt = support_v[0]
+			# 	print(customers)
+			# 	print('ERROR: interior location: v_lbar_opt clipped below to ', v_lbar_opt)
+			# else:
+			v_lbar_opt = phi_v_inv(temp_threshold,support_v)
 
 
 		p_s_opt = v_lbar_opt*k_delta_bar*customers[customer_j]['sd']
@@ -506,7 +517,7 @@ if __name__=='__main__':
 
 	#Initialize customer 2
 	customers[2] = {}	
-	customers[2]['s'] = np.array([2.8,-0.8]) #np.array([1,1])
+	customers[2]['s'] = np.array([.5,1.2])
 	if params['scenario'] in ['ssd','sssd','ssssd']:
 		customers[2]['d'] = customers[1]['d']
 	elif params['scenario']=='sdsd':
@@ -531,7 +542,7 @@ if __name__=='__main__':
 
 		#Initialize customer 3		
 		customers[3] = {}
-		customers[3]['s'] = np.array([1.7,.3])
+		customers[3]['s'] = np.array([.5,-2.5]) #np.array([1.7,.3])
 		customers[3]['d'] = customers[1]['d']
 		customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
 		customers[3]['delta_bar'] = params['delta_same']
