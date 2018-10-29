@@ -23,18 +23,18 @@ params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
 params['k_bar'] = 1
-params['scenario'] = 'sssd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'ssssd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 
 #Constants for Optimization
-# params['solver_type'] = 'closed_form' #  'gridsearch' #
+params['solver_type'] = 'closed_form' #  'gridsearch' #
 params['gridsearch_num'] = 21
 params['p_x_max_per_mile'] = params['support_v'][1]
 
 #Location grid
-params['x_min'] = -1
-params['x_max'] = 4
-params['y_min'] = -1
-params['y_max'] = 2
+params['x_min'] = -3
+params['x_max'] = 3
+params['y_min'] = -3
+params['y_max'] = 3
 params['xy_grid_resolution_num'] = 20
 params['xvals'] = np.array(list(range(params['x_min']*params['xy_grid_resolution_num'],params['x_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 params['yvals'] = np.array(list(range(params['y_min']*params['xy_grid_resolution_num'],params['y_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
@@ -67,16 +67,16 @@ params['all_data_keys'] = [
 	'foc_condition_boundary_overlay_prob_pool']
 
 params['plot_keys'] = [
-	'profitval',
-	'expost_penalty',
-	'ps',
-	'px',
+	# 'profitval',
+	# 'expost_penalty',
+	# 'ps',
+	# 'px',
 	'prob_pool',
-	'prob_exclusive',
-	'prob_nothing',
-	't_j',
+	# 'prob_exclusive',
+	# 'prob_nothing',
+	# 't_j',
 	# 'circle_s1d',
-	'profitval_and_prob_pool',
+	# 'profitval_and_prob_pool',
 	# 'circle_delta_1_bar',
 	# 'circle_delta_2_bar',
 	# 'circle_delta_3_bar',

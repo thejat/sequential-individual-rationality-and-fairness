@@ -418,7 +418,7 @@ def maximize_incremental_profit_j(params,customers):
 				print(customers)
 				print('ERROR: interior location: v_ubar_opt clipped below to ', v_ubar_opt)
 			else:
-				# print('temp_threshold unclipped ',temp_threshold)
+				print('temp_threshold unclipped ',temp_threshold)
 				v_ubar_opt = phi_v_inv(temp_threshold,support_v)
 
 			#Solve for v_lbar_opt
@@ -426,7 +426,15 @@ def maximize_incremental_profit_j(params,customers):
 			temp_val_dr = k_delta_bar*customers[customer_j]['sd']
 			temp_threshold = temp_val_nr/temp_val_dr
 			assert phi(v_ubar_opt,support_v) > temp_threshold
-			v_lbar_opt = phi_v_inv(temp_threshold,support_v)
+			if temp_threshold >= support_v[1]:
+				v_lbar_opt = support_v[1]
+				# print('v_ubar_opt clipped above to ', v_ubar_opt)
+			elif temp_threshold <= 2*support_v[0] - support_v[1]:
+				v_lbar_opt = support_v[0]
+				print(customers)
+				print('ERROR: interior location: v_lbar_opt clipped below to ', v_lbar_opt)
+			else:
+				v_lbar_opt = phi_v_inv(temp_threshold,support_v)
 
 
 		p_s_opt = v_lbar_opt*k_delta_bar*customers[customer_j]['sd']

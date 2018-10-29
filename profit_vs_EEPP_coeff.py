@@ -1,5 +1,5 @@
 '''
-This generalizes the destination of the second customer
+This generalizes the destination of the second customer as well as looks at the third and fourth customers
 
 	scenario 1
 		Analysis of maximum profit as a function of EEPP_coeff for 2 customers, single source setting
@@ -81,7 +81,7 @@ def opt_profits_given_multiplier(params):
 
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
-	customers[2]['s'] = np.array([.5,1])  #HARDCODE
+	customers[2]['s'] = np.array([.5,1.2])  #HARDCODE
 	customers[2]['d'] = customers[1]['d']
 	customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
 	customers[2]['delta_bar'] = params['delta_same']
@@ -267,8 +267,8 @@ def plot_data(data_params_customers,EEPP_coeff):
 
 
 #Global constants
-EEPP_coeff_array = [params['EEPP_coeff']] 
-# EEPP_coeff_array = [0.25,1,10,50,100,1000,100000]
+# EEPP_coeff_array = [params['EEPP_coeff']] 
+EEPP_coeff_array = [1,10,1000]
 
 if __name__=='__main__':
 	params['start_time'] = time.time()
@@ -288,13 +288,13 @@ if __name__=='__main__':
 		for EEPP_coeff in EEPP_coeff_array:
 			params['EEPP_coeff'] = EEPP_coeff
 			all_data.append(opt_profits_given_multiplier(params))
-			pickle.dump(all_data,open('./output/all_data.pkl','wb'))
+			pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
 
 
-	for idx,EEPP_coeff in enumerate(EEPP_coeff_array):
-		plot_data(all_data[idx],EEPP_coeff)
+	# for idx,EEPP_coeff in enumerate(EEPP_coeff_array):
+	# 	plot_data(all_data[idx],EEPP_coeff)
 	
-	pickle.dump(all_data,open('./output/all_data.pkl','wb'))
+	pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
 	print('Experiment finished. Time elapsed', time.time()-params['start_time'])
 
 
