@@ -50,6 +50,19 @@ def indicator_of(boo):
 	else:
 		return 0
 
+def indicator_of2D(boo,indicator_threshold=0):
+    '''
+    returns 1 if argument is true, else returns false
+    '''
+    boo2 = np.zeros(boo.shape)
+    for idx1 in range(boo.shape[0]):
+       for idx2 in range(boo.shape[1]): 
+        if boo[idx1,idx2] > indicator_threshold:
+            boo2[idx1,idx2] = 1
+        else:
+            boo2[idx1,idx2] = 0
+    return boo2
+
 def distance(a,b):
 	dist = np.linalg.norm(a-b)
 	return dist
@@ -477,7 +490,6 @@ def solve_for_customer_j_wrapper(customers,params):
 
 	return prices_j,incremental_profit_j_surface
 
-
 def update_customer_information(customers,prices_j):
 
 	customer_j = len(customers)
@@ -489,7 +501,6 @@ def update_customer_information(customers,prices_j):
 	customers[customer_j]['p_s'] = prices_j['p_s']
 
 	return customers
-
 
 #=========================================
 
