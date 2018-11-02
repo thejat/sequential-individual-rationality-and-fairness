@@ -84,10 +84,10 @@ def opt_profits_given_multiplier(params):
 
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
-	if params['scenario']=='sdsd':
-		customers[2]['s'] = np.array([1,.75])  #HARDCODE
-	else:
-		customers[2]['s'] = np.array([.5,1.35])  #HARDCODE
+	# if params['scenario']=='sdsd':
+	customers[2]['s'] = np.array([1,.75])  #HARDCODE
+	# else:
+	# 	customers[2]['s'] = np.array([.5,1.35])  #HARDCODE
 	customers[2]['d'] = customers[1]['d']
 	customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
 	customers[2]['delta_bar'] = params['delta_same']
@@ -103,7 +103,7 @@ def opt_profits_given_multiplier(params):
 
 		#Initialize customer 3		
 		customers[3] = {}
-		customers[3]['s'] = np.array([1.4,.6]) #HARDCODE
+		customers[3]['s'] = np.array([1.7,.4]) #HARDCODE
 		customers[3]['d'] = customers[1]['d']
 		customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
 		customers[3]['delta_bar'] = params['delta_same']
@@ -169,6 +169,13 @@ def opt_profits_given_multiplier(params):
 
 			threshold_circle = 5e-2
 			data['circle_s1d'][idxi,idxj] = indicator_of(abs(distance(np.array([i,j]),customers[1]['s']) -customers[1]['sd']) < threshold_circle)
+
+
+			if params['scenario']=='ssd':
+					temp_circle_val = source_detour_for_j(customers) - customers[1]['delta_bar']*customers[1]['sd']
+
+					data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
+					data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
 
 
 			if params['scenario']=='sdsd':

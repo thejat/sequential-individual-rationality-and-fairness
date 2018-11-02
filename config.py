@@ -23,7 +23,7 @@ params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
 params['k_bar'] = 1
-params['scenario'] = 'sdsd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'sssd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 
 #Constants for Optimization
 params['solver_type'] = 'closed_form' #  'gridsearch' #
@@ -36,7 +36,7 @@ if params['scenario'] == 'sdsd':
 	params['x_max'] = 5
 	params['y_min'] = -5
 	params['y_max'] = 5
-	params['EEPP_coeff_array'] = [1]#[1,10,50] #[10000,100000]#[50,1000]#
+	params['EEPP_coeff_array'] = [1,10]#[1,10,50] #[10000,100000]#[50,1000]#
 else:
 	params['x_min'] = -3
 	params['x_max'] = 3
@@ -91,9 +91,9 @@ params['plot_keys'] = [
 	# 'circle_delta_2_bar',
 	# 'circle_delta_3_bar',
 	'profitval_and_prob_pool_and_deltabars',
-	# 'circle_delta_1_bar_region',
-	# 'circle_delta_2_bar_region',
-	# 'circle_delta_3_bar_region',
+	'circle_delta_1_bar_region',
+	'circle_delta_2_bar_region',
+	'circle_delta_3_bar_region',
 	# 'foc_condition',
 	# 'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool',
