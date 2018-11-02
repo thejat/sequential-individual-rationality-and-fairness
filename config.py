@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 #Settings for Plotting
-plt.style.use('seaborn-pastel')
+plt.style.use('seaborn-white')
 plt.rcParams['font.size'] 		= 30
 plt.rcParams['axes.labelsize'] 	= 30
 plt.rcParams['axes.titlesize'] 	= 30
@@ -23,7 +23,7 @@ params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
 params['k_bar'] = 1
-params['scenario'] = 'ssd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'sdsd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
 
 #Constants for Optimization
 params['solver_type'] = 'closed_form' #  'gridsearch' #
@@ -31,10 +31,19 @@ params['gridsearch_num'] = 21
 params['p_x_max_per_mile'] = params['support_v'][1]
 
 #Location grid
-params['x_min'] = -3
-params['x_max'] = 3
-params['y_min'] = -3
-params['y_max'] = 3
+if params['scenario'] == 'sdsd':
+	params['x_min'] = -5
+	params['x_max'] = 5
+	params['y_min'] = -5
+	params['y_max'] = 5
+	params['EEPP_coeff_array'] = [10000,100000]#[50,1000]#[1,10]
+else:
+	params['x_min'] = -3
+	params['x_max'] = 3
+	params['y_min'] = -3
+	params['y_max'] = 3
+	params['EEPP_coeff_array'] = [1,10]
+
 params['xy_grid_resolution_num'] = 20
 params['xvals'] = np.array(list(range(params['x_min']*params['xy_grid_resolution_num'],params['x_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 params['yvals'] = np.array(list(range(params['y_min']*params['xy_grid_resolution_num'],params['y_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
@@ -82,10 +91,10 @@ params['plot_keys'] = [
 	# 'circle_delta_3_bar',
 	'profitval_and_prob_pool_and_deltabars',
 	# 'circle_delta_1_bar_region',
-	# 'circle_delta_2_bar_region',
+	'circle_delta_2_bar_region',
 	# 'circle_delta_3_bar_region',
 	# 'foc_condition',
-	# 'foc_condition_boundary',
+	'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool']
 params['plot_probabilities'] = [
 	'prob_pool',

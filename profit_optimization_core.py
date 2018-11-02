@@ -528,11 +528,11 @@ if __name__=='__main__':
 
 	#Initialize customer 2
 	customers[2] = {}	
-	customers[2]['s'] = np.array([.5,1.2])
+	customers[2]['s'] = np.array([1,.75])
 	if params['scenario'] in ['ssd','sssd','ssssd']:
 		customers[2]['d'] = customers[1]['d']
 	elif params['scenario']=='sdsd':
-		customers[2]['d'] = np.array([2,-.5])
+		customers[2]['d'] = np.array([2.8,1])
 	customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
 	customers[2]['delta_bar'] = params['delta_same']
 	customers[2]['k_delta_bar'] = degradation(customers[2]['delta_bar'],params['degradation_multiplier'],params['k_bar'])

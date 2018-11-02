@@ -81,7 +81,10 @@ def opt_profits_given_multiplier(params):
 
 	# Customer 2 initialize, these will be overwritten in the for loops below
 	customers[2] = {}
-	customers[2]['s'] = np.array([.5,1.35])  #HARDCODE
+	if params['scenario']=='sdsd':
+		customers[2]['s'] = np.array([1,.75])  #HARDCODE
+	else:
+		customers[2]['s'] = np.array([.5,1.35])  #HARDCODE
 	customers[2]['d'] = customers[1]['d']
 	customers[2]['sd']  = distance(customers[2]['s'],customers[2]['d'])
 	customers[2]['delta_bar'] = params['delta_same']
@@ -155,8 +158,8 @@ def opt_profits_given_multiplier(params):
 			data['ps'][idxi,idxj] = prices.get('p_s')
 			data['px'][idxi,idxj] = prices.get('p_x')
 
-			threshold_min_prob = 1e-3           
-			data['prob_pool'][idxi,idxj] = prob_pool_val #prob_pool_val*indicator_of(prob_pool_val > threshold_min_prob)
+			threshold_min_prob = 1e-4           
+			data['prob_pool'][idxi,idxj] = prob_pool_val*indicator_of(prob_pool_val > threshold_min_prob) # prob_pool_val #
 			data['prob_exclusive'][idxi,idxj] = prob_exclusive_val
 			data['prob_nothing'][idxi,idxj] = 1 - data['prob_pool'][idxi,idxj] - prob_exclusive_val
 			data['t_j'][idxi,idxj] = t_j
@@ -215,7 +218,7 @@ def opt_profits_given_multiplier(params):
 					data['circle_delta_3_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_3_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
 
-			if params['scenario'] in ['ssd','sssd','ssssd']:
+			if params['scenario'] in ['ssd','sssd','ssssd','sdsd']:
 				threshold_foc = 1e-2
 
 				data['foc_condition'][idxi,idxj] = params['c_op']*(customers[customer_j]['sd']*customers[customer_j]['k_delta_bar'] - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
@@ -266,18 +269,14 @@ def plot_data(data_params_customers,EEPP_coeff):
 		fig.clf()
 
 
-#Global constants
-# EEPP_coeff_array = [params['EEPP_coeff']] 
-EEPP_coeff_array = [1,10,1000]
-
 if __name__=='__main__':
 	params['start_time'] = time.time()
 	print('Run scenario: ',params['scenario'])
-	print('EEPP_coeff_array is',EEPP_coeff_array)
+	print('EEPP_coeff_array is',params['EEPP_coeff_array'])
 
 	if params['multiprocessing'] is True:
 		plist = []
-		for idx,EEPP_coeff in enumerate(EEPP_coeff_array):
+		for idx,EEPP_coeff in enumerate(params['EEPP_coeff_array']):
 			temp = copy.deepcopy(params)
 			temp['EEPP_coeff'] = EEPP_coeff
 			plist.append(temp)
@@ -285,13 +284,13 @@ if __name__=='__main__':
 			all_data = p.map(opt_profits_given_multiplier,plist)
 	else:
 		all_data  = []
-		for EEPP_coeff in EEPP_coeff_array:
+		for EEPP_coeff in params['EEPP_coeff_array']:
 			params['EEPP_coeff'] = EEPP_coeff
 			all_data.append(opt_profits_given_multiplier(params))
 			pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
 
 
-	for idx,EEPP_coeff in enumerate(EEPP_coeff_array):
+	for idx,EEPP_coeff in enumerate(params['EEPP_coeff_array']):
 		plot_data(all_data[idx],EEPP_coeff)
 	
 	pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
