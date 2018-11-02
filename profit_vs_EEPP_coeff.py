@@ -60,7 +60,10 @@ def opt_profits_given_multiplier(params):
 	#Logging data initialize
 	data = {}
 	for key in params['all_data_keys']:
-		data[key] = np.zeros((params['xvals'].shape[0],params['yvals'].shape[0]))
+		if key in ['circle_delta_1_bar_region','circle_delta_2_bar_region','circle_delta_3_bar_region']:
+			data[key] = np.ones((params['xvals'].shape[0],params['yvals'].shape[0]))
+		else:
+			data[key] = np.zeros((params['xvals'].shape[0],params['yvals'].shape[0]))
 
 	#Customer 1 initialize
 	customers = OrderedDict()
@@ -149,7 +152,7 @@ def opt_profits_given_multiplier(params):
 
 			customer_j = len(customers)
 			t_j,temp_route = opt_customer_to_drop_after_j(customers)
-			[profit,prices,profit_surface] = maximize_incremental_profit_j(params,customers)
+			[profit,prices,profit_surface,customers] = maximize_incremental_profit_j(params,customers)
 			(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = get_incremental_profit_adding_j_components([prices['p_x'],prices['p_s']],customers,params['c_op'],params['support_v'],params['degradation_multiplier'],params['EEPP_coeff'],t_j,params['k_bar'])
 
 
@@ -229,11 +232,13 @@ def opt_profits_given_multiplier(params):
 
 
 	data['profitval_and_prob_pool'] = data['profitval']*np.sign(data['prob_pool'])#-np.min(data['prob_pool'])
-	temp1 = 1e-1 + data['profitval_and_prob_pool']
-	temp2 = 1 - data['circle_delta_1_bar']
-	temp3 = 1 - data['circle_delta_2_bar']
-	temp4 = 1 - data['circle_delta_3_bar']	
-	data['profitval_and_prob_pool_and_deltabars'] = temp1*temp2*temp3*temp4
+
+	temp2 = data['circle_delta_1_bar_region']
+	temp3 = temp2*data['circle_delta_2_bar_region']
+	temp4 = temp3*data['circle_delta_3_bar_region']
+	data['delta1bars_intersection'] = temp4
+
+	data['profitval_and_prob_pool_and_deltabars'] = data['profitval_and_prob_pool']*data['delta1bars_intersection']
 
 	return {'data':data,'params':params,'customers':customers}
 	# pickle.dump(all_data,open('./output/all_data.pkl','wb'))

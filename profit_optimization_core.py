@@ -73,7 +73,7 @@ def degradation(delta_i,degradation_multiplier,k_bar):
 	'''
 	# k_bar = .88
 	degradation_coeff = k_bar - delta_i/degradation_multiplier
-	return degradation_coeff
+	return max(1e-6,degradation_coeff) #HARDCODE
 
 def assert_p_s_1_greater_than_c_op(p_s_1,c_op,s1d1):
 	'''
@@ -115,6 +115,9 @@ def prob_pool_j(p_x,p_s,sidi,support_v,k_delta_bar,flag_print_arguments=False):
 	v_ubar = (p_x - p_s)/((1-k_delta_bar)*sidi)
 	v_lbar = p_s/(k_delta_bar*sidi)
 
+	# print('p_x',p_x)
+	# print('p_s',p_s)
+	# print('k_delta_bar',k_delta_bar)
 	# print('v_ubar',v_ubar)
 	# print('v_lbar',v_lbar)
 
@@ -122,8 +125,11 @@ def prob_pool_j(p_x,p_s,sidi,support_v,k_delta_bar,flag_print_arguments=False):
 		print('WARNING: Prob(Shared) computation issue. Returning 0')
 		if flag_print_arguments is True:
 			print('Need args (probability of choosing shared) between 0 and 1 with the second smaller than the first: ',v_ubar,'>',v_lbar)
-		return 0
+		return 0#,v_lbar,v_lbar
 	prob_pool_val = F_v(v_ubar,support_v) - F_v(v_lbar,support_v)
+
+
+	# print(min(max(0,prob_pool_val),1),v_ubar,v_lbar)
 
 	return min(max(0,prob_pool_val),1),v_ubar,v_lbar
 
@@ -176,7 +182,7 @@ def destination_detour_for_j(customers,t_j):
 
 	return destination_detour_val
 
-def set_actual_detours_w_j(customers,t_j):
+def set_actual_detours_w_j(customers,t_j,params):
 
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
@@ -201,6 +207,11 @@ def set_actual_detours_w_j(customers,t_j):
 		delta_j_j /= customers[customer_j]['sd']
 
 		customers[customer_j]['actual_detour_w_j'] = delta_j_j
+
+	# print(customers)
+	customers[customer_j]['delta_bar'] = params['delta_same'] + customers[customer_j]['actual_detour_w_j']
+	customers[customer_j]['k_delta_bar'] = degradation(customers[customer_j]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
+	# print(customers)
 
 	return customers
 
@@ -344,6 +355,10 @@ def maximize_incremental_profit_j(params,customers):
 
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
+	t_j,temp_route = opt_customer_to_drop_after_j(customers)
+	# print('t_j',t_j)
+	customers = set_actual_detours_w_j(customers,t_j,params)
+
 	k_delta_bar = customers[customer_j]['k_delta_bar']
 
 	solver_type = params['solver_type']
@@ -365,9 +380,6 @@ def maximize_incremental_profit_j(params,customers):
 	assert px_lb <= initial_guess[0] <= px_ub
 	assert ps_lb <= initial_guess[1] <= ps_ub
 
-	t_j,temp_route = opt_customer_to_drop_after_j(customers)
-	# print('t_j',t_j)
-	customers = set_actual_detours_w_j(customers,t_j)
 
 	profit = get_incremental_profit_adding_j(initial_guess,customers,c_op,support_v,degradation_multiplier,EEPP_coeff,t_j,k_bar)
 
@@ -467,14 +479,14 @@ def maximize_incremental_profit_j(params,customers):
 	else:
 		print('NO SOLVER!')
 
-	return (profit,{'p_x':p_x_opt,'p_s':p_s_opt},profit_surface)
+	return (profit,{'p_x':p_x_opt,'p_s':p_s_opt},profit_surface,customers)
 
 def solve_for_customer_j_wrapper(customers,params):
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
 	t_j,temp_route = opt_customer_to_drop_after_j(customers)
-	customers = set_actual_detours_w_j(customers,t_j)
-	[incremental_profit_j,prices_j,incremental_profit_j_surface] = maximize_incremental_profit_j(params,customers)
+	customers = set_actual_detours_w_j(customers,t_j,params)
+	[incremental_profit_j,prices_j,incremental_profit_j_surface,customers] = maximize_incremental_profit_j(params,customers)
 
 	print('customer_j',customer_j,'active_customer_idxes',active_customer_idxes)
 	for idx in customers:

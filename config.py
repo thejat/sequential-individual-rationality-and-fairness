@@ -36,7 +36,7 @@ if params['scenario'] == 'sdsd':
 	params['x_max'] = 5
 	params['y_min'] = -5
 	params['y_max'] = 5
-	params['EEPP_coeff_array'] = [10000,100000]#[50,1000]#[1,10]
+	params['EEPP_coeff_array'] = [1]#[1,10,50] #[10000,100000]#[50,1000]#
 else:
 	params['x_min'] = -3
 	params['x_max'] = 3
@@ -73,7 +73,8 @@ params['all_data_keys'] = [
 	'circle_delta_3_bar_region',
 	'foc_condition',
 	'foc_condition_boundary',
-	'foc_condition_boundary_overlay_prob_pool']
+	'foc_condition_boundary_overlay_prob_pool',
+	'delta1bars_intersection']
 
 params['plot_keys'] = [
 	# 'profitval',
@@ -91,11 +92,12 @@ params['plot_keys'] = [
 	# 'circle_delta_3_bar',
 	'profitval_and_prob_pool_and_deltabars',
 	# 'circle_delta_1_bar_region',
-	'circle_delta_2_bar_region',
+	# 'circle_delta_2_bar_region',
 	# 'circle_delta_3_bar_region',
 	# 'foc_condition',
-	'foc_condition_boundary',
-	'foc_condition_boundary_overlay_prob_pool']
+	# 'foc_condition_boundary',
+	'foc_condition_boundary_overlay_prob_pool',
+	'delta1bars_intersection']
 params['plot_probabilities'] = [
 	'prob_pool',
 	'prob_exclusive',
