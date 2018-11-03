@@ -44,7 +44,7 @@ else:
 	params['y_max'] = 3
 	params['EEPP_coeff_array'] = [1,10]
 
-params['xy_grid_resolution_num'] = 20
+params['xy_grid_resolution_num'] = 20 #100
 params['xvals'] = np.array(list(range(params['x_min']*params['xy_grid_resolution_num'],params['x_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 params['yvals'] = np.array(list(range(params['y_min']*params['xy_grid_resolution_num'],params['y_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 

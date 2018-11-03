@@ -504,6 +504,10 @@ def solve_for_customer_j_wrapper(customers,params):
 
 def update_customer_information(customers,prices_j):
 
+	#TBD: the ordering the customers is always indexed by the order in which they will drop off before the next pickup optimization, this is significant for multi destination settings
+	#TBD: use deepcopy while changing customers
+	# assume customers ids are from 1 to j-1 followed by j
+
 	customer_j = len(customers)
 	for idx in customers:
 		customers[idx]['actual_detour_wo_j'] = customers[idx]['actual_detour_w_j']
