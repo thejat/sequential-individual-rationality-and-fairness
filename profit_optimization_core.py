@@ -84,7 +84,7 @@ def assert_p_s_1_greater_than_c_op(p_s_1,c_op,s1d1):
 def assert_ex_ante_customer1_IR(support_v,p_s_1,delta_bar,k_delta_bar,s1d1):
 	#customer 1's ex ante IR constraint
 	ir_1_ante = s1d1*k_delta_bar*support_v[1] - p_s_1
-	print('Ex ante customer 1 IR should be nonneg for support_v[1]:',ir_1_ante)
+	# print('Ex ante customer 1 IR should be nonneg for support_v[1]:',ir_1_ante)
 	assert ir_1_ante > 0
 
 def active_customers_j(customers):
@@ -184,6 +184,11 @@ def destination_detour_for_j(customers,t_j):
 
 def set_actual_detours_w_j(customers,t_j,params):
 
+	'''
+	customers dictionary is being changed here
+	'''
+
+
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
 
@@ -209,6 +214,7 @@ def set_actual_detours_w_j(customers,t_j,params):
 		customers[customer_j]['actual_detour_w_j'] = delta_j_j
 
 	# print(customers)
+	# print('customer ',customer_j, 's delta_bar is being incremented from ',params['delta_same'], ' by a value ',customers[customer_j]['actual_detour_w_j'], ' to get ',params['delta_same'] + customers[customer_j]['actual_detour_w_j'])
 	customers[customer_j]['delta_bar'] = params['delta_same'] + customers[customer_j]['actual_detour_w_j']
 	customers[customer_j]['k_delta_bar'] = degradation(customers[customer_j]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
 	# print(customers)
@@ -486,16 +492,15 @@ def solve_for_customer_j_wrapper(customers,params):
 	customer_j = len(customers)
 	active_customer_idxes = active_customers_j(customers)
 	t_j,temp_route = opt_customer_to_drop_after_j(customers)
-	customers = set_actual_detours_w_j(customers,t_j,params)
 
 	[incremental_profit_j,prices_j,incremental_profit_j_surface,customers] = maximize_incremental_profit_j(params,customers)
 
-	print('customer_j',customer_j,'active_customer_idxes',active_customer_idxes)
-	for idx in customers:
-		print('customer ',idx,': sd',customers[idx]['sd'],'delta_bar',customers[idx]['delta_bar'],'k_delta_bar',customers[idx]['k_delta_bar'],'wo_j',customers[idx]['actual_detour_wo_j'],'w_j',customers[idx]['actual_detour_w_j'])
-	print('t_j',t_j,'temp_route',temp_route)
+	print('solver wrapper: customer_j',customer_j,'active_customer_idxes',active_customer_idxes)
+	# for idx in customers:
+		# print('customer ',idx,': sd',customers[idx]['sd'],'delta_bar',customers[idx]['delta_bar'],'k_delta_bar',customers[idx]['k_delta_bar'],'wo_j',customers[idx]['actual_detour_wo_j'],'w_j',customers[idx]['actual_detour_w_j'])
+	print('solver wrapper: t_j',t_j,'temp_route',temp_route)
 	# print(customers)
-	print('Incremental profit for j:',incremental_profit_j,'prices',prices_j)
+	print('solver wrapper: Incremental profit for j:',incremental_profit_j,'prices',prices_j)
 
 
 	(prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum) = \
@@ -508,8 +513,8 @@ def solve_for_customer_j_wrapper(customers,params):
 					params['EEPP_coeff'],
 					t_j,
 					params['k_bar'])
-	print('prbx,probp,incrpex,incpp,expp',prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
-	print('scaled: p_x',prices_j['p_x']/customers[customer_j]['sd'],'p_s',prices_j['p_s']/customers[customer_j]['sd'])
+	print('solver wrapper: prbx,probp,incrpex,incpp,expp',prob_exclusive_val,prob_pool_val,incr_profit_exclusive_val,incr_profit_pool_val,expost_penalty_sum)
+	print('solver wrapper: scaled prices: p_x',prices_j['p_x']/customers[customer_j]['sd'],'p_s',prices_j['p_s']/customers[customer_j]['sd'])
 
 	return prices_j,incremental_profit_j_surface,customers
 
@@ -560,7 +565,7 @@ if __name__=='__main__':
 
 		#Initialize customer 2
 		customers[2] = {}	
-		customers[2]['s'] = np.array([1,.75])
+		customers[2]['s'] = np.array([1,.8])
 		if params['scenario'] in ['ssd','sssd','ssssd']:
 			customers[2]['d'] = customers[1]['d']
 		elif params['scenario']=='sdsd':
@@ -574,7 +579,7 @@ if __name__=='__main__':
 
 
 		#Solving for prices for customer 2
-		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 
 
 	if params['scenario'] in ['sssd','ssssd']:
@@ -593,7 +598,7 @@ if __name__=='__main__':
 		customers[3]['is_bootstrapped'] = False
 
 
-		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 
 
 	if params['scenario']=='ssssd':
@@ -612,7 +617,7 @@ if __name__=='__main__':
 		customers[4]['is_bootstrapped'] = False
 
 
-		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 
 
 
@@ -632,7 +637,7 @@ if __name__=='__main__':
 		customers[2]['is_bootstrapped'] = False
 
 		#Solving for prices for customer 2
-		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 
 
 		customers = update_customer_information(customers,prices_j)
@@ -640,8 +645,8 @@ if __name__=='__main__':
 
 		#Initialize customer 3		
 		customers[3] = {}
-		customers[3]['s'] = np.array([.5,-2.5]) #np.array([1.7,.3])
-		customers[3]['d'] = customers[1]['d']
+		customers[3]['s'] = np.array([1.75,.75]) 
+		customers[3]['d'] = np.array([1.5,-1.8])
 		customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
 		customers[3]['delta_bar'] = params['delta_same']
 		customers[3]['k_delta_bar'] = degradation(customers[3]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
@@ -649,5 +654,5 @@ if __name__=='__main__':
 		customers[3]['is_bootstrapped'] = False
 
 
-		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 

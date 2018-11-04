@@ -98,7 +98,7 @@ def opt_profits_given_multiplier(params):
 	if params['scenario'] in ['sssd','ssssd','sdsdsd']:
 
 		#Pricing for Customer 2
-		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 		customers = update_customer_information(customers,prices_j)
 
 		#Initialize customer 3		
@@ -114,7 +114,7 @@ def opt_profits_given_multiplier(params):
 	if params['scenario'] == 'ssssd':
 
 		#Pricing for Customer 3
-		prices_j,incremental_profit_j_surface = solve_for_customer_j_wrapper(customers,params)
+		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 		customers = update_customer_information(customers,prices_j)
 
 		#Initialize customer 4		
@@ -230,7 +230,7 @@ def opt_profits_given_multiplier(params):
 					data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
 
-					temp_circle_val = distance(customers[3]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[3]['d']) - (1 +customers[2]['delta_bar'])*customers[3]['sd']
+					temp_circle_val = distance(customers[3]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[3]['d']) - (1 +customers[3]['delta_bar'])*customers[3]['sd']
 
 					data['circle_delta_3_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_3_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
@@ -247,7 +247,7 @@ def opt_profits_given_multiplier(params):
 					data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
 
-					temp_circle_val = distance(customers[3]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) + distance(customers[2]['d'],customers[3]['d']) - (1 +customers[2]['delta_bar'])*customers[3]['sd']
+					temp_circle_val = distance(customers[3]['s'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) + distance(customers[2]['d'],customers[3]['d']) - (1 +customers[3]['delta_bar'])*customers[3]['sd']
 
 					data['circle_delta_3_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_3_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
