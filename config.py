@@ -23,7 +23,7 @@ params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
 params['k_bar'] = 1
-params['scenario'] = 'sdsd' #'ssssd' #'sssd' # 'ssd' #'sdsd' means two different destinations, 'ssd' means a common one, two customers
+params['scenario'] = 'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
 
 #Constants for Optimization
 params['solver_type'] = 'closed_form' #  'gridsearch' #
@@ -31,18 +31,24 @@ params['gridsearch_num'] = 21
 params['p_x_max_per_mile'] = params['support_v'][1]
 
 #Location grid
-if params['scenario'] == 'sdsd':
+if params['scenario'] in ['sdsd','sdsdsd']:
 	params['x_min'] = -1
 	params['x_max'] = 3
 	params['y_min'] = -2
 	params['y_max'] = 2
 	params['EEPP_coeff_array'] = [1,50]#[1,10,50] #[10000,100000]#[50,1000]#
-else:
+elif params['scenario'] in ['ssd','sssd','ssssd']:
 	params['x_min'] = -3
 	params['x_max'] = 3
 	params['y_min'] = -3
 	params['y_max'] = 3
 	params['EEPP_coeff_array'] = [1,10]
+else:
+	params['x_min'] = -3
+	params['x_max'] = 3
+	params['y_min'] = -3
+	params['y_max'] = 3
+	params['EEPP_coeff_array'] = [1,10000000]
 
 params['xy_grid_resolution_num'] = 20 #100
 params['xvals'] = np.array(list(range(params['x_min']*params['xy_grid_resolution_num'],params['x_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
@@ -74,7 +80,7 @@ params['all_data_keys'] = [
 	'foc_condition',
 	'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool',
-	'delta1bars_intersection']
+	'deltabars_intersection']
 
 params['plot_keys'] = [
 	# 'profitval',
@@ -97,7 +103,7 @@ params['plot_keys'] = [
 	# 'foc_condition',
 	# 'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool',
-	'delta1bars_intersection']
+	'deltabars_intersection']
 params['plot_probabilities'] = [
 	'prob_pool',
 	'prob_exclusive',
