@@ -23,20 +23,34 @@ params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
 params['k_bar'] = 1
-params['scenario'] =  'sdsdsd' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
 
 #Constants for Optimization
 params['solver_type'] = 'closed_form' #  'gridsearch' #
 params['gridsearch_num'] = 21
 params['p_x_max_per_mile'] = params['support_v'][1]
 
-#Location grid
+
+#Profit vs EEPP_coeff parameters
+
+params['scenario'] =  'all' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
+params['sdsdsd_scale'] = 'large'
+
+
+#Location grid and other choices
+params['xy_grid_resolution_num'] = 20 #100
 if params['scenario'] in ['sdsd','sdsdsd']:
-	params['x_min'] = -1
-	params['x_max'] = 3
-	params['y_min'] = -2
-	params['y_max'] = 2
-	params['EEPP_coeff_array'] = [1,10000000]
+	if params['sdsdsd_scale']=='large':
+		params['x_min'] = -5
+		params['x_max'] = 15
+		params['y_min'] = -15
+		params['y_max'] = 5
+		params['xy_grid_resolution_num'] = 1 #20 #100
+	else:	
+		params['x_min'] = -1
+		params['x_max'] = 3
+		params['y_min'] = -2
+		params['y_max'] = 2
+	params['EEPP_coeff_array'] = [1,20]
 elif params['scenario'] in ['ssd','sssd','ssssd']:
 	params['x_min'] = -3
 	params['x_max'] = 3
@@ -48,17 +62,13 @@ else:
 	params['x_max'] = 3
 	params['y_min'] = -3
 	params['y_max'] = 3
-	params['EEPP_coeff_array'] = [1,10000000]
-
-params['xy_grid_resolution_num'] = 20 #100
+	params['EEPP_coeff_array'] = [1,10]
 params['xvals'] = np.array(list(range(params['x_min']*params['xy_grid_resolution_num'],params['x_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 params['yvals'] = np.array(list(range(params['y_min']*params['xy_grid_resolution_num'],params['y_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 
-
-
-#Profit vs EEPP_coeff
 params['multiprocessing'] = False
 params['nprocesses'] = 8
+
 params['all_data_keys'] = [
 	'profitval',
 	'expost_penalty',
@@ -104,6 +114,7 @@ params['plot_keys'] = [
 	# 'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool',
 	'deltabars_intersection']
+
 params['plot_probabilities'] = [
 	'prob_pool',
 	'prob_exclusive',

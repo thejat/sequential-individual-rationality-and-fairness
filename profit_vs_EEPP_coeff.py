@@ -337,7 +337,7 @@ def run_scenario(params,scenario=None,flag_plot=False):
 	if scenario is not None:
 		params['scenario'] = scenario
 	if scenario is None and params['scenario'] == 'all':
-		print('SCENARIO not specified.')
+		print('SCENARIO not specified. the parameters specific to the all scenario will be used.')
 		return 0
 
 
