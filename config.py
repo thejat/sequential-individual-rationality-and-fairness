@@ -32,37 +32,35 @@ params['p_x_max_per_mile'] = params['support_v'][1]
 
 #Profit vs EEPP_coeff parameters
 
-params['scenario'] =  'all' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
-params['sdsdsd_scale'] = 'large'
+params['scenario'] =  'sdsdsd' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
+params['sdsdsd_scale'] = 'small'
 
 
 #Location grid and other choices
-params['xy_grid_resolution_num'] = 20 #100
+params['xy_grid_resolution_num'] = 100 #NOTE: Anything above 10 is large!!!
 if params['scenario'] in ['sdsd','sdsdsd']:
 	if params['sdsdsd_scale']=='large':
 		params['x_min'] = -5
 		params['x_max'] = 15
 		params['y_min'] = -15
 		params['y_max'] = 5
-		params['xy_grid_resolution_num'] = 1 #20 #100
+		params['xy_grid_resolution_num'] = 20 #20 #100
 	else:	
 		params['x_min'] = -1
 		params['x_max'] = 3
 		params['y_min'] = -2
 		params['y_max'] = 2
-	params['EEPP_coeff_array'] = [1,20]
 elif params['scenario'] in ['ssd','sssd','ssssd']:
 	params['x_min'] = -3
 	params['x_max'] = 3
 	params['y_min'] = -3
 	params['y_max'] = 3
-	params['EEPP_coeff_array'] = [1,10]
 else:
 	params['x_min'] = -3
 	params['x_max'] = 3
 	params['y_min'] = -3
 	params['y_max'] = 3
-	params['EEPP_coeff_array'] = [1,10]
+params['EEPP_coeff_array'] = [1,20]
 params['xvals'] = np.array(list(range(params['x_min']*params['xy_grid_resolution_num'],params['x_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 params['yvals'] = np.array(list(range(params['y_min']*params['xy_grid_resolution_num'],params['y_max']*params['xy_grid_resolution_num'],1)))/params['xy_grid_resolution_num']
 

@@ -360,10 +360,13 @@ def run_scenario(params,scenario=None,flag_plot=False):
 	print('Experiment finished. Time elapsed', time.time()-params['start_time'])
 
 if __name__=='__main__':
-	# run_scenario(params,scenario='ssd')
-	# run_scenario(params,scenario='sssd')
-	# run_scenario(params,scenario='ssssd')
+	if params['scenario']=='all':
+		# run_scenario(params,scenario='ssd')
+		# run_scenario(params,scenario='sssd')
+		# run_scenario(params,scenario='ssssd')
 
-	run_scenario(params,scenario='sdsd')
-	run_scenario(params,scenario='sdsdsd')
+		# run_scenario(params,scenario='sdsd')
+		run_scenario(params,scenario='sdsdsd')
 
+	else:
+		run_scenario(params)		
