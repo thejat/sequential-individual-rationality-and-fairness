@@ -349,7 +349,7 @@ def run_scenario(params,scenario=None,flag_plot=False):
 	for EEPP_coeff in params['EEPP_coeff_array']:
 		params['EEPP_coeff'] = EEPP_coeff
 		all_data.append(opt_profits_given_multiplier(params))
-		pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
+		# pickle.dump(all_data,open('./output/all_data_'+params['scenario']+'.pkl','wb'))
 
 
 	if flag_plot is True:
