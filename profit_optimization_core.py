@@ -12,34 +12,68 @@ import scipy.integrate as integrate
 from collections import OrderedDict
 from config import *
 
+# def phi_v_inv(y,support_v):
+# 	'''
+# 	Inverse function of virtual valuation for the uniform distribution. 
+# 	See https://en.wikipedia.org/wiki/Regular_distribution_(economics)
+# 	'''
+# 	if y > support_v[1] or y < 2*support_v[0] - support_v[1]:
+# 		return None
+# 	return 0.5*(support_v[1]+y)
+
+# def phi(v,support_v):
+# 	if v is None or f_v(v,support_v) <= 0:
+# 		return -np.inf
+# 	return v - (1-F_v(v,support_v))/f_v(v,support_v)
+
+# def f_v(v,support_v):
+# 	'''
+# 	PDF of Uniform[0,1]
+# 	'''
+# 	if v >= support_v[0] and v<= support_v[1]:
+# 		return 1.0/(support_v[1] - support_v[0])
+# 	else:
+# 		return 0
+
+# def F_v(v,support_v):
+# 	'''
+# 	CDF of Uniform[0,1]
+# 	'''
+# 	return min(max(0,(v- support_v[0])*1.0/(support_v[1] - support_v[0])),1)
+
+
 def phi_v_inv(y,support_v):
 	'''
-	Inverse function of virtual valuation for the uniform distribution. 
-	See https://en.wikipedia.org/wiki/Regular_distribution_(economics)
+	exponential dist virtual valuation function inverse
 	'''
-	if y > support_v[1] or y < 2*support_v[0] - support_v[1]:
-		return None
-	return 0.5*(support_v[1]+y)
+	lambda_param = 2 #separately duplicated TBD
+	return y + 1.0/lambda_param
 
 def phi(v,support_v):
-	if v is None or f_v(v,support_v) <= 0:
-		return -np.inf
-	return v - (1-F_v(v,support_v))/f_v(v,support_v)
+	'''
+	exponential dist virtual valuation function
+	'''
+	lambda_param = 2 #separately duplicated TBD
+	return v - 1.0/lambda_param
 
 def f_v(v,support_v):
 	'''
-	PDF of Uniform[0,1]
+	PDF of exponential
+
 	'''
-	if v >= support_v[0] and v<= support_v[1]:
-		return 1.0/(support_v[1] - support_v[0])
-	else:
-		return 0
+	lambda_param = 2 #separately duplicated TBD
+	return lambda_param*np.exp(-lambda_param*v)
+
 
 def F_v(v,support_v):
 	'''
-	CDF of Uniform[0,1]
+	CDF of exponential
 	'''
-	return min(max(0,(v- support_v[0])*1.0/(support_v[1] - support_v[0])),1)
+	lambda_param = 2 #separately duplicated TBD
+	return 1 - np.exp(-lambda_param*v)
+
+
+
 
 def indicator_of(boo):
 	'''

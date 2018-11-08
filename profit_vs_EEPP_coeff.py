@@ -164,7 +164,7 @@ def opt_profits_given_multiplier(params):
 			data['ps'][idxi,idxj] = prices.get('p_s')
 			data['px'][idxi,idxj] = prices.get('p_x')
 
-			threshold_min_prob = 1e-4           
+			threshold_min_prob = 1e-9           
 			data['prob_pool'][idxi,idxj] = prob_pool_val*indicator_of(prob_pool_val > threshold_min_prob) # prob_pool_val #
 			data['prob_exclusive'][idxi,idxj] = prob_exclusive_val
 			data['prob_nothing'][idxi,idxj] = 1 - data['prob_pool'][idxi,idxj] - prob_exclusive_val
@@ -180,6 +180,7 @@ def opt_profits_given_multiplier(params):
 					data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
 
+					data['s2d2'] = customers[2]['sd']
 
 			if params['scenario']=='sdsd':
 				if t_j == 2:

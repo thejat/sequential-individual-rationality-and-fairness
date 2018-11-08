@@ -18,7 +18,7 @@ plt.rcParams['figure.titlesize']= 30
 params = {}
 params['c_op'] 	=  .1
 params['delta_same'] =  .3
-params['support_v'] = (0,1)
+params['support_v'] = (0,np.inf) #(0,1)
 params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
@@ -27,17 +27,19 @@ params['k_bar'] = 1
 #Constants for Optimization
 params['solver_type'] = 'closed_form' #  'gridsearch' #
 params['gridsearch_num'] = 21
-params['p_x_max_per_mile'] = params['support_v'][1]
-
+if np.isinf(params['support_v'][1]):
+	params['p_x_max_per_mile'] = 1e3 #params['support_v'][1] #TBD Bad Hardcode
+else:
+	params['p_x_max_per_mile'] = params['support_v'][1]
 
 #Profit vs EEPP_coeff parameters
 
-params['scenario'] =  'sdsdsd' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
+params['scenario'] =  'ssd' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
 params['sdsdsd_scale'] = 'small'
 
 
 #Location grid and other choices
-params['xy_grid_resolution_num'] = 100 #NOTE: Anything above 10 is large!!!
+params['xy_grid_resolution_num'] = 20 #NOTE: Anything above 10 is large!!!
 if params['scenario'] in ['sdsd','sdsdsd']:
 	if params['sdsdsd_scale']=='large':
 		params['x_min'] = -5
@@ -88,7 +90,8 @@ params['all_data_keys'] = [
 	'foc_condition',
 	'foc_condition_boundary',
 	'foc_condition_boundary_overlay_prob_pool',
-	'deltabars_intersection']
+	'deltabars_intersection',
+	's2d2']
 
 params['plot_keys'] = [
 	# 'profitval',
