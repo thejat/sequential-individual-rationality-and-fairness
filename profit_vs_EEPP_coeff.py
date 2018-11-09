@@ -206,13 +206,13 @@ def opt_profits_given_multiplier(params):
 
 			if params['scenario']=='sdsdsd':
 				if t_j == 1:
-					temp_circle_val = distance(customers[1]['s'],customers[2]['s']) + distance(customers[3]['s'],customers[3]['d']) + distance(customers[3]['d'],customers[1]['d']) - (1 + customers[1]['delta_bar'])*customers[1]['sd']
+					temp_circle_val = distance(customers[1]['s'],customers[2]['s']) + distance(customers[2]['s'],customers[3]['s']) + distance(customers[3]['s'],customers[3]['d']) + distance(customers[3]['d'],customers[1]['d']) - (1 + customers[1]['delta_bar'])*customers[1]['sd']
 
 					data['circle_delta_1_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_1_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)
 
 
-					temp_circle_val = distance(customers[2]['s'],customers[3]['s']) + distance(customers[3]['s'],customers[3]['d']) + distance(customers[3]['d'],customers[1]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd']
+					temp_circle_val = distance(customers[2]['s'],customers[3]['s']) + distance(customers[3]['s'],customers[3]['d']) + distance(customers[3]['d'],customers[1]['d']) + distance(customers[1]['d'],customers[2]['d']) - (1 +customers[2]['delta_bar'])*customers[2]['sd']
 
 					data['circle_delta_2_bar'][idxi,idxj] = indicator_of(abs(temp_circle_val) < threshold_circle)
 					data['circle_delta_2_bar_region'][idxi,idxj] = indicator_of(temp_circle_val < 0)

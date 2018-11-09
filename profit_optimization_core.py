@@ -458,6 +458,7 @@ def maximize_incremental_profit_j(params,customers):
 		expost_penalty_sum = 0
 		for idx in active_customer_idxes:
 			expost_penalty_sum += get_incremental_penalty([None,None],customers,idx,degradation_multiplier,support_v,k_bar)
+			# print('inside solver: customer ',idx,' penalty:',get_incremental_penalty([None,None],customers,idx,degradation_multiplier,support_v,k_bar))
 
 		#boundary condition
 		boundary_condition = c_op*(customers[customer_j]['sd']*k_delta_bar - (source_detour_for_j(customers) + destination_detour_for_j(customers,t_j))) - EEPP_coeff*expost_penalty_sum
@@ -572,7 +573,8 @@ def update_customer_information(customers,prices_j):
 
 def main():
 	print('Run scenario: ',params['scenario'])
-	print('Run solver type', params['solver_type'])
+	print('Run EEPP_coeff: ',params['EEPP_coeff'])
+	print('Run solver type:', params['solver_type'])
 	if params['scenario'] == 'all':
 		print('Need to specify a proper scenario in config.py')
 		return
@@ -683,7 +685,7 @@ def main():
 		customers[3] = {}
 		customers[3]['s'] = np.array([1.75,.75]) 
 		alpha = -20
-		customers[3]['d'] = alpha*np.array([1.75,.75]) + (1-alpha)*customers[2]['d'] #np.array([1.5,-1.8])
+		customers[3]['d'] = np.array([2.84,.61]) #alpha*np.array([1.75,.75]) + (1-alpha)*customers[2]['d'] #np.array([1.5,-1.8])
 		customers[3]['sd']  = distance(customers[3]['s'],customers[3]['d'])
 		customers[3]['delta_bar'] = params['delta_same']
 		customers[3]['k_delta_bar'] = degradation(customers[3]['delta_bar'],params['degradation_multiplier'],params['k_bar'])
@@ -694,7 +696,7 @@ def main():
 		prices_j,incremental_profit_j_surface,customers = solve_for_customer_j_wrapper(customers,params)
 
 
-		print(customers)
+		# print(customers)
 
 
 if __name__=='__main__':

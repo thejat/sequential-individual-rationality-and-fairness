@@ -18,7 +18,7 @@ plt.rcParams['figure.titlesize']= 30
 params = {}
 params['c_op'] 	=  .1
 params['delta_same'] =  .3
-params['support_v'] = (0,np.inf) #(0,1)
+params['support_v'] = (0,np.inf) #(0,1) #Exponential distribution is hardcoded
 params['degradation_multiplier'] = 2
 params['EEPP_coeff'] = 1
 params['p_s_1_per_mile'] = 0.15
@@ -34,7 +34,7 @@ else:
 
 #Profit vs EEPP_coeff parameters
 
-params['scenario'] =  'ssd' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
+params['scenario'] =  'sdsdsd' #'all' #'sdsdsd' #'sdsd' #'ssssd' #'sssd' # 'ssd' #here 'sdsd' and 'sdsdsd' mean different destinations, 'ssd' means a common one, two customers
 params['sdsdsd_scale'] = 'small'
 
 
@@ -98,7 +98,7 @@ params['plot_keys'] = [
 	# 'expost_penalty',
 	# 'ps',
 	# 'px',
-	'prob_pool',
+	# 'prob_pool',
 	# 'prob_exclusive',
 	# 'prob_nothing',
 	# 't_j',
@@ -107,14 +107,15 @@ params['plot_keys'] = [
 	# 'circle_delta_1_bar',
 	# 'circle_delta_2_bar',
 	# 'circle_delta_3_bar',
-	'profitval_and_prob_pool_and_deltabars',
-	'circle_delta_1_bar_region',
-	'circle_delta_2_bar_region',
-	'circle_delta_3_bar_region',
+	# 'profitval_and_prob_pool_and_deltabars',
+	# 'circle_delta_1_bar_region',
+	# 'circle_delta_2_bar_region',
+	# 'circle_delta_3_bar_region',
 	# 'foc_condition',
 	# 'foc_condition_boundary',
-	'foc_condition_boundary_overlay_prob_pool',
-	'deltabars_intersection']
+	# 'foc_condition_boundary_overlay_prob_pool',
+	# 'deltabars_intersection'
+	]
 
 params['plot_probabilities'] = [
 	'prob_pool',
