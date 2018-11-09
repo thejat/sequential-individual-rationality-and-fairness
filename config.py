@@ -39,7 +39,7 @@ params['sdsdsd_scale'] = 'small'
 
 
 #Location grid and other choices
-params['xy_grid_resolution_num'] = 20 #NOTE: Anything above 10 is large!!!
+params['xy_grid_resolution_num'] = 100 #NOTE: Anything above 10 is large!!!
 if params['scenario'] in ['sdsd','sdsdsd']:
 	if params['sdsdsd_scale']=='large':
 		params['x_min'] = -5
