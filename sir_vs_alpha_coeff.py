@@ -87,13 +87,13 @@ if __name__=='__main__':
 
 	#Constants for Model
 	params = {}
-	params['scenario']= 'ssssd' # 'ssd' #'sssd' # 'ssssd'
+	params['scenario']= 'ssd' # 'ssd' #'sssd' # 'ssssd'
 	params['start_time'] = time.time()
-	params['alpha_same'] =  .3
+	params['alpha_same'] =  1
 	params['alpha_op_array'] = [.1,1]
 
 	#Location grid and other choices
-	params['xy_grid_resolution_num'] = 10 #NOTE: Anything above 10 is large!!!
+	params['xy_grid_resolution_num'] = 100 #NOTE: Anything above 10 is large!!!
 	params['x_min'] = -3
 	params['x_max'] = 3
 	params['y_min'] = -3
